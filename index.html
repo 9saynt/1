@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>理詰めナンプレ 超難問</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="理詰めナンプレ">
+<meta name="theme-color" content="#2b3140">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3efe6; --paper:#fffdf8; --ink:#1e2430; --sub:#6b6f78; --line:#2b3140; --thin:#c9c3b5;
+  --given:#1e2430; --user:#2457c5; --tent:#d0741c; --memo:#5a6170;
+  --sel:#ffe7a3; --rel:#f4ecd8; --same:#ffd56b; --bad:#d7263d; --badbg:#fde3e6;
+  --hint:#2fa36b; --hintbg:#dff3e8; --accent:#2b3140;
+  --nan:#3a7d44; --cho:#b5552b; --kyoku:#6d2b8f;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",system-ui,sans-serif}
+body{min-height:100vh;display:flex;justify-content:center}
+.app{width:100%;max-width:520px;padding:10px 10px 28px;display:flex;flex-direction:column;gap:10px}
+header{display:flex;align-items:center;gap:8px}
+.title{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:17px;letter-spacing:.04em;flex:1;line-height:1.2}
+.title small{display:block;font-size:11px;color:var(--sub);font-weight:500;letter-spacing:0}
+.pill{border:0;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;color:#fff;cursor:pointer}
+.timer{font-variant-numeric:tabular-nums;font-size:14px;color:var(--sub);min-width:52px;text-align:right}
+.iconbtn{border:1px solid var(--thin);background:var(--paper);border-radius:10px;width:34px;height:34px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}
+
+.boardwrap{position:relative}
+.board{display:grid;grid-template-columns:repeat(9,1fr);aspect-ratio:1;width:100%;background:var(--paper);border:2.5px solid var(--line);border-radius:6px;overflow:hidden;user-select:none;touch-action:manipulation}
+.cell{position:relative;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--thin);border-bottom:1px solid var(--thin);cursor:pointer;font-size:min(7.2vw,34px);line-height:1}
+.cell.c2,.cell.c5{border-right:2px solid var(--line)}
+.cell.c8{border-right:0}
+.cell.r2,.cell.r5{border-bottom:2px solid var(--line)}
+.cell.r8{border-bottom:0}
+.cell.rel{background:var(--rel)}
+.cell.same{background:var(--same)}
+.cell.sel{background:var(--sel);box-shadow:inset 0 0 0 2px #e0a100}
+.cell.hintc{box-shadow:inset 0 0 0 2.5px var(--hint)}
+.cell.hintt{background:var(--hintbg)}
+.cell.wrong{background:var(--badbg)}
+.v{font-weight:500}
+.v.given{color:var(--given);font-weight:700}
+.v.user{color:var(--user)}
+.v.tent{color:var(--tent);font-style:italic}
+.v.conf{color:var(--bad)!important}
+.cell.wrong .v{color:var(--bad);text-decoration:line-through}
+.memo{position:absolute;inset:1px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr)}
+.memo span{display:flex;align-items:center;justify-content:center;font-size:min(2.7vw,13px);color:var(--memo);font-weight:500;border-radius:3px}
+.memo span.hl{background:#ffcf4d;color:#000}
+.memo span.el{color:var(--bad);text-decoration:line-through;font-weight:700}
+.memo span.pk{color:#fff;background:var(--hint)}
+
+.modes{display:grid;grid-template-columns:repeat(3,1fr);background:#e5dfd1;border-radius:12px;padding:3px;gap:3px}
+.modes button{border:0;background:transparent;border-radius:9px;padding:9px 0;font:inherit;font-weight:700;font-size:14px;color:var(--sub);cursor:pointer}
+.modes button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.modes button[data-m=tent].on{color:var(--tent)}
+.modes button[data-m=memo].on{color:var(--memo)}
+.modes button[data-m=fix].on{color:var(--user)}
+
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.act{border:1px solid var(--thin);background:var(--paper);border-radius:12px;padding:7px 0 6px;font:inherit;font-size:12px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.act b{font-size:18px;line-height:1}
+.act:disabled{opacity:.35;cursor:default}
+
+.pad{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.pad button{border:0;background:var(--accent);color:#fff;border-radius:10px;aspect-ratio:.78;font:inherit;font-size:min(6.4vw,28px);font-weight:700;cursor:pointer;position:relative;padding:0}
+.pad button small{position:absolute;bottom:3px;left:0;right:0;font-size:10px;font-weight:500;opacity:.7}
+.pad.m-memo button{background:#7a8091}
+.pad.m-tent button{background:var(--tent)}
+.pad button.done{opacity:.25}
+
+.tools{display:flex;flex-wrap:wrap;gap:6px}
+.tools button{border:1px solid var(--thin);background:transparent;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;color:var(--ink);cursor:pointer}
+.tools label{display:flex;align-items:center;gap:4px;font-size:12.5px;color:var(--sub);padding:6px 4px}
+
+.hintbox{background:var(--paper);border:2px solid var(--hint);border-radius:14px;padding:10px 12px;display:none}
+.hintbox.show{display:block}
+.hintbox .tn{font-weight:700;color:var(--hint);font-size:15px}
+.hintbox .td{font-size:13px;margin:4px 0 8px;line-height:1.55;word-break:break-all}
+.hintbox .row{display:flex;gap:6px;justify-content:flex-end}
+.hintbox button{border:0;border-radius:9px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.btn-p{background:var(--hint);color:#fff}
+.btn-s{background:#e8e3d6;color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:50;max-width:90vw;text-align:center}
+.toast.show{opacity:.94}
+
+.sheet{position:fixed;inset:0;background:rgba(20,22,30,.45);display:none;align-items:flex-end;justify-content:center;z-index:40}
+.sheet.show{display:flex}
+.panel{background:var(--paper);width:100%;max-width:520px;max-height:86vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px 26px}
+.panel h2{margin:0 0 10px;font-family:"Zen Maru Gothic",sans-serif;font-size:18px}
+.panel h3{margin:16px 0 6px;font-size:15px}
+.panel p,.panel li{font-size:13.5px;line-height:1.7}
+.panel ul{padding-left:18px;margin:4px 0}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;border:2px solid transparent;border-radius:10px;padding:8px 0;font:inherit;font-weight:700;color:#fff;cursor:pointer;opacity:.45}
+.tabs button.on{opacity:1}
+.tierdesc{font-size:12.5px;color:var(--sub);margin:0 0 10px;line-height:1.6}
+.nums{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.nums button{border:1px solid var(--thin);background:#fff;border-radius:10px;padding:8px 0 6px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px}
+.nums button small{font-size:9.5px;color:var(--sub);font-weight:500;min-height:12px}
+.nums button.clr{background:#eef6ef;border-color:#9cc9a5}
+.nums button.cur{outline:2.5px solid var(--ink)}
+.close{float:right;border:0;background:#e8e3d6;border-radius:999px;width:30px;height:30px;font-size:16px;cursor:pointer}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
+.legend i{font-style:normal;font-weight:700}
+.clear{text-align:center}
+.clear .big{font-family:"Zen Maru Gothic",sans-serif;font-size:26px;font-weight:700;margin:6px 0}
+.clear .stat{font-size:14px;color:var(--sub);margin-bottom:14px}
+.clear button{margin:4px}
+.confirmrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">理詰めナンプレ<small id="sub">—</small></div>
+    <button class="pill" id="pickBtn">問題選択</button>
+    <div class="timer" id="timer">0:00</div>
+    <button class="iconbtn" id="helpBtn" aria-label="難しさについて">?</button>
+  </header>
+
+  <div class="boardwrap"><div class="board" id="board"></div></div>
+
+  <div class="hintbox" id="hintbox">
+    <div class="tn" id="hintName"></div>
+    <div class="td" id="hintDesc"></div>
+    <div class="row"><button class="btn-s" id="hintClose">閉じる</button><button class="btn-p" id="hintApply">この手を反映</button></div>
+  </div>
+
+  <div class="modes" id="modes">
+    <button data-m="fix" class="on">確定</button>
+    <button data-m="tent">仮置き</button>
+    <button data-m="memo">メモ（候補）</button>
+  </div>
+
+  <div class="actions">
+    <button class="act" id="undoBtn"><b>↶</b>戻る</button>
+    <button class="act" id="redoBtn"><b>↷</b>進む</button>
+    <button class="act" id="eraseBtn"><b>⌫</b>消す</button>
+    <button class="act" id="hintBtn"><b>💡</b>ヒント</button>
+  </div>
+
+  <div class="pad" id="pad"></div>
+
+  <div class="tools">
+    <button id="autoMemo">候補を全部書く</button>
+    <button id="tentFix">仮置きを確定</button>
+    <button id="tentClear">仮置きを全消去</button>
+    <button id="checkBtn">答え合わせ</button>
+    <button id="resetBtn">最初から</button>
+    <button id="xferBtn" style="border-color:var(--hint);color:var(--hint);font-weight:700">記録の引き継ぎ</button>
+    <label><input type="checkbox" id="autoRm" checked>確定時に周りのメモを消す</label>
+  </div>
+  <div class="legend"><span><i style="color:var(--given)">5</i> 問題</span><span><i style="color:var(--user)">5</i> 確定</span><span><i style="color:var(--tent);font-style:italic">5</i> 仮置き</span><span>小さい数字＝メモ</span></div>
+</div>
+
+<div class="sheet" id="pickSheet"><div class="panel">
+  <button class="close" data-close>✕</button>
+  <h2>問題選択</h2>
+  <div class="tabs" id="tabs"></div>
+  <p class="tierdesc" id="tierDesc"></p>
+  <div class="nums" id="nums"></div>
+</div></div>
+
+<div class="sheet" id="helpSheet"><div class="panel">
+  <button class="close" data-close>✕</button>
+  <h2>「難しい」ナンプレとは</h2>
+  <p>難しさはヒント数字の少なさでは決まりません。決めるのは<b>「次の一手を見つけるのに、どれだけ深い推論が要るか」</b>です。</p>
+  <p>世にある「難問」の多くは、次の2つの手だけで最後まで解けます。</p>
+  <ul>
+    <li><b>シングル</b>：そのマスにはこの数字しか入らない／その数字はそのマスにしか入らない</li>
+    <li><b>候補の絞り込み</b>：ペア・トリプル、X-ウィングなど、決まった形を探すだけの手</li>
+  </ul>
+  <p>これらは「形を見つければ終わり」なので、慣れた人にはやさしく感じます。このアプリの問題は、形の暗記では進めない局面がくり返し出るように選んであります。</p>
+  <h3>難易度の段階</h3>
+  <ul>
+    <li><b style="color:var(--nan)">難問</b>：同じ数字だけ、または候補2つのマスだけをたどる<b>連鎖（X-/XY-チェーン）</b>が必要。</li>
+    <li><b style="color:var(--cho)">超難問</b>：数字もマスも行き来する長い連鎖<b>（AIC＝交互推論チェーン）</b>を何度も使う。</li>
+    <li><b style="color:var(--kyoku)">極</b>：さらに<b>グループ連鎖</b>（ブロック内の候補のまとまりを1つの点として扱う連鎖）や<b>ALS</b>（N個のマスにN+1個の候補しかない組）が必要。AICも20〜30回級。</li>
+  </ul>
+  <h3>一本道の設計</h3>
+  <p>全問、<b>最後の難所を越えるまでは「その時点で確定して入るマスは常に1か所だけ」</b>になるよう作ってあります。他のマスで先に稼ぐことはできず、その1か所を埋めると次の手掛かりが生まれ、また1か所だけが開く——という順で進みます。</p>
+  <p style="font-size:12px;color:var(--sub)">※最後の難所を越えたあとは一気に埋まります。空きマスが少なくなると複数のマスが同時に決まるのは、ナンプレの構造上どんな問題でも避けられないためです。</p>
+  <h3>「試しに入れてみる」は不要</h3>
+  <p>どの問題も解は1つだけで、内蔵ソルバーが<b>仮定・試し入れ・場合分け（強制連鎖、背理法）を一切使わずに</b>最後まで解けることを確認済みです。使う手筋はすべて、盤面の候補を観察すれば成り立つ関係（「この2つのどちらかは必ず真」「この2つは同時に真にならない」）を組み合わせたものです。</p>
+  <p>難しさは「試す量」ではなく、<b>その関係の連なりを盤面から見つけ出す難しさ</b>にあります。「ヒント」を押すと、今の盤面で使える一番やさしい一手を、手筋の名前と根拠つきで表示します。</p>
+  <p style="font-size:12px;color:var(--sub)">※「仮置き」は自由に使えるメモ機能です。解くために必要になることはありません。</p>
+  <h3>操作</h3>
+  <ul>
+    <li><b>確定</b>：本記入。<b>仮置き</b>：オレンジ色で数字を入れる仮定用（「仮置きを確定」「全消去」で一括処理）。<b>メモ</b>：候補を小さく書く。</li>
+    <li><b>戻る／進む</b>：全操作を1手ずつ取り消し・やり直し。</li>
+    <li>キーボード：数字・矢印・Backspace、M＝メモ切替、T＝仮置き切替、Ctrl+Z／Ctrl+Y。</li>
+  </ul>
+</div></div>
+
+<div class="sheet" id="clearSheet"><div class="panel clear">
+  <div class="big">クリア！</div>
+  <div class="stat" id="clearStat"></div>
+  <p style="font-size:12.5px;color:var(--sub);margin:-6px 0 12px">記録が消えないよう、「記録の引き継ぎ」でコードを控えておくと安心です。</p>
+  <button class="btn-s" data-close style="border:0;border-radius:9px;padding:9px 14px;font:inherit;font-weight:700">盤面を見る</button>
+  <button class="btn-p" id="nextBtn" style="border:0;border-radius:9px;padding:9px 14px;font:inherit;font-weight:700">次の問題へ</button>
+</div></div>
+
+<div class="sheet" id="xferSheet"><div class="panel">
+  <button class="close" data-close>✕</button>
+  <h2>記録の引き継ぎ</h2>
+  <p>記録はこの端末のブラウザに自動保存されますが、ブラウザのデータ消去や機種変更に備えて、<b>引き継ぎコード</b>を控えておくと安心です。いつでも・どの端末でも記録を戻せます（クリア記録、ベストタイム、解いている途中の盤面とメモ）。</p>
+  <h3>① コードを書き出す</h3>
+  <textarea id="xferOut" readonly rows="4" style="width:100%;font-family:monospace;font-size:12px;border:1px solid var(--thin);border-radius:8px;padding:8px;word-break:break-all"></textarea>
+  <div class="confirmrow" style="margin-top:6px"><button class="btn-p" id="xferCopy" style="border:0;border-radius:9px;padding:9px 14px;font:inherit;font-weight:700">コピー</button></div>
+  <p style="font-size:12px;color:var(--sub)">LINEの自分用トークやメモ帳に貼り付けて保存しておくのがおすすめです。</p>
+  <h3>② コードを読み込む</h3>
+  <textarea id="xferIn" rows="4" placeholder="ここに引き継ぎコードを貼り付け" style="width:100%;font-family:monospace;font-size:12px;border:1px solid var(--thin);border-radius:8px;padding:8px;word-break:break-all"></textarea>
+  <div class="confirmrow" style="margin-top:6px"><button class="btn-p" id="xferLoad" style="border:0;border-radius:9px;padding:9px 14px;font:inherit;font-weight:700">読み込む</button></div>
+  <p style="font-size:12px;color:var(--sub)">読み込むと、コード側の記録がこの端末の記録に合流します（クリア済み・ベストタイムは良い方を残し、途中の盤面はコードの内容になります）。</p>
+</div></div>
+
+<div class="sheet" id="confirmSheet"><div class="panel">
+  <h2 id="confirmMsg"></h2>
+  <div class="confirmrow"><button class="btn-s" data-close style="border:0;border-radius:9px;padding:9px 14px;font:inherit;font-weight:700">やめる</button><button class="btn-p" id="confirmOk" style="border:0;border-radius:9px;padding:9px 14px;font:inherit;font-weight:700;background:var(--bad)">OK</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// 人間向け論理ソルバー（手筋判定つき）
+(function (root) {
+  'use strict';
+  const UNITS = [];
+  for (let r = 0; r < 9; r++) { const u = []; for (let c = 0; c < 9; c++) u.push(r * 9 + c); UNITS.push(u); }
+  for (let c = 0; c < 9; c++) { const u = []; for (let r = 0; r < 9; r++) u.push(r * 9 + c); UNITS.push(u); }
+  for (let b = 0; b < 9; b++) {
+    const u = []; const br = Math.floor(b / 3) * 3, bc = (b % 3) * 3;
+    for (let i = 0; i < 9; i++) u.push((br + Math.floor(i / 3)) * 9 + bc + (i % 3));
+    UNITS.push(u);
+  }
+  const ROW = (c) => Math.floor(c / 9), COL = (c) => c % 9;
+  const BOX = (c) => Math.floor(ROW(c) / 3) * 3 + Math.floor(COL(c) / 3);
+  const CU = []; const PEERS = []; const SEES = [];
+  for (let i = 0; i < 81; i++) {
+    CU.push([ROW(i), 9 + COL(i), 18 + BOX(i)]);
+    const s = new Uint8Array(81);
+    for (const u of CU[i]) for (const p of UNITS[u]) if (p !== i) s[p] = 1;
+    SEES.push(s);
+    const l = []; for (let p = 0; p < 81; p++) if (s[p]) l.push(p);
+    PEERS.push(l);
+  }
+  const POP = new Uint8Array(1024); for (let i = 1; i < 1024; i++) POP[i] = POP[i >> 1] + (i & 1);
+  const DIGITS = []; for (let m = 0; m < 1024; m++) { const l = []; for (let d = 1; d <= 9; d++) if (m & (1 << d)) l.push(d); DIGITS.push(l); }
+  const ALL = 0x3fe;
+  const cn = (c) => 'R' + (ROW(c) + 1) + 'C' + (COL(c) + 1);
+  const UNAME = (u) => u < 9 ? (u + 1) + '行目' : u < 18 ? (u - 8) + '列目' : (u - 17) + '番ブロック';
+
+  function makeState(grid) { // grid: array of 81 ints, 0 = 空
+    const st = { grid: new Int8Array(81), cand: new Uint16Array(81) };
+    st.cand.fill(ALL);
+    for (let i = 0; i < 81; i++) if (grid[i]) {
+      const d = grid[i];
+      if (!(st.cand[i] & (1 << d))) return null;
+      place(st, i, d);
+    }
+    return st;
+  }
+  function clone(st) { return { grid: Int8Array.from(st.grid), cand: Uint16Array.from(st.cand) }; }
+  function place(st, i, d) {
+    st.grid[i] = d; st.cand[i] = 0; const b = ~(1 << d);
+    for (const p of PEERS[i]) st.cand[p] &= b;
+  }
+  function apply(st, step) {
+    for (const [c, d] of step.elim) st.cand[c] &= ~(1 << d);
+    for (const [c, d] of step.place) if (!st.grid[c]) place(st, c, d);
+  }
+  function solved(st) { for (let i = 0; i < 81; i++) if (!st.grid[i]) return false; return true; }
+  function broken(st) {
+    for (let i = 0; i < 81; i++) if (!st.grid[i] && !st.cand[i]) return true;
+    for (const u of UNITS) {
+      let seen = 0;
+      for (const c of u) seen |= st.grid[c] ? (1 << st.grid[c]) : st.cand[c];
+      if (seen !== ALL) return true;
+    }
+    return false;
+  }
+  function posMask(st, u, d) { // ユニット内で d が入りうる位置（ビット＝ユニット内インデックス）
+    let m = 0; const bit = 1 << d; const U = UNITS[u];
+    for (let k = 0; k < 9; k++) if (st.cand[U[k]] & bit) m |= 1 << k;
+    return m;
+  }
+  function placedIn(st, u, d) { for (const c of UNITS[u]) if (st.grid[c] === d) return true; return false; }
+  function combos(arr, n, cb) {
+    const idx = [];
+    (function rec(start) {
+      if (idx.length === n) return cb(idx.map((i) => arr[i]));
+      for (let i = start; i < arr.length; i++) { idx.push(i); if (rec(i + 1)) return true; idx.pop(); }
+      return false;
+    })(0);
+  }
+  const mk = (tech, level, place, elim, cells, desc) => ({ tech, level, place, elim, cells, desc });
+
+  // ---------- 手筋 ----------
+  function nakedSingle(st) {
+    for (let i = 0; i < 81; i++) if (!st.grid[i] && POP[st.cand[i]] === 1) {
+      const d = DIGITS[st.cand[i]][0];
+      return mk('ネイキッドシングル', 1, [[i, d]], [], [i], cn(i) + ' に入る候補は ' + d + ' だけ');
+    }
+    return null;
+  }
+  function hiddenSingle(st) {
+    for (const order of [[18, 27], [0, 18]]) for (let u = order[0]; u < order[1]; u++) for (let d = 1; d <= 9; d++) {
+      const m = posMask(st, u, d);
+      if (POP[m] === 1) {
+        const c = UNITS[u][31 - Math.clz32(m)];
+        return mk('ヒドゥンシングル', 1, [[c, d]], [], [c], UNAME(u) + ' で ' + d + ' が入れるのは ' + cn(c) + ' だけ');
+      }
+    }
+    return null;
+  }
+  function lockedCandidates(st) {
+    for (let b = 18; b < 27; b++) for (let d = 1; d <= 9; d++) {
+      const cells = UNITS[b].filter((c) => st.cand[c] & (1 << d)); if (cells.length < 2) continue;
+      for (const [f, base] of [[ROW, 0], [COL, 9]]) {
+        const v = f(cells[0]); if (!cells.every((c) => f(c) === v)) continue;
+        const elim = UNITS[base + v].filter((c) => BOX(c) !== b - 18 && (st.cand[c] & (1 << d))).map((c) => [c, d]);
+        if (elim.length) return mk('ロックド・キャンディデート（ポインティング）', 2, [], elim, cells,
+          UNAME(b) + ' の ' + d + ' は ' + UNAME(base + v) + ' に限られるので、同じ' + (base ? '列' : '行') + 'の他から ' + d + ' を消去');
+      }
+    }
+    for (let u = 0; u < 18; u++) for (let d = 1; d <= 9; d++) {
+      const cells = UNITS[u].filter((c) => st.cand[c] & (1 << d)); if (cells.length < 2) continue;
+      const b = BOX(cells[0]); if (!cells.every((c) => BOX(c) === b)) continue;
+      const elim = UNITS[18 + b].filter((c) => !cells.includes(c) && (st.cand[c] & (1 << d))).map((c) => [c, d]);
+      if (elim.length) return mk('ロックド・キャンディデート（クレーミング）', 2, [], elim, cells,
+        UNAME(u) + ' の ' + d + ' は ' + UNAME(18 + b) + ' 内に限られるので、ブロックの他から ' + d + ' を消去');
+    }
+    return null;
+  }
+  const SUBN = ['', '', 'ペア', 'トリプル', 'クアッド'];
+  function nakedSubset(n) {
+    return function (st) {
+      let res = null;
+      for (let u = 0; u < 27 && !res; u++) {
+        const cells = UNITS[u].filter((c) => !st.grid[c] && POP[st.cand[c]] >= 2 && POP[st.cand[c]] <= n);
+        if (cells.length < n) continue;
+        combos(cells, n, (cs) => {
+          let m = 0; for (const c of cs) m |= st.cand[c];
+          if (POP[m] !== n) return false;
+          const elim = [];
+          for (const c of UNITS[u]) if (!cs.includes(c) && (st.cand[c] & m)) for (const d of DIGITS[st.cand[c] & m]) elim.push([c, d]);
+          if (!elim.length) return false;
+          res = mk('ネイキッド' + SUBN[n], n === 2 ? 3 : n === 3 ? 3 : 4, [], elim, cs,
+            UNAME(u) + ' の ' + cs.map(cn).join(',') + ' は {' + DIGITS[m].join('') + '} で占められる');
+          return true;
+        });
+      }
+      return res;
+    };
+  }
+  function hiddenSubset(n) {
+    return function (st) {
+      let res = null;
+      for (let u = 0; u < 27 && !res; u++) {
+        const ds = []; const pm = [];
+        for (let d = 1; d <= 9; d++) { const m = posMask(st, u, d); pm[d] = m; if (POP[m] >= 2 && POP[m] <= n) ds.push(d); }
+        if (ds.length < n) continue;
+        combos(ds, n, (dd) => {
+          let m = 0; for (const d of dd) m |= pm[d];
+          if (POP[m] !== n) return false;
+          let keep = 0; for (const d of dd) keep |= 1 << d;
+          const cs = []; const elim = [];
+          for (let k = 0; k < 9; k++) if (m & (1 << k)) {
+            const c = UNITS[u][k]; cs.push(c);
+            for (const d of DIGITS[st.cand[c] & ~keep]) elim.push([c, d]);
+          }
+          if (!elim.length) return false;
+          res = mk('ヒドゥン' + SUBN[n], n === 2 ? 3 : 4, [], elim, cs,
+            UNAME(u) + ' で {' + dd.join('') + '} が入れるのは ' + cs.map(cn).join(',') + ' だけ');
+          return true;
+        });
+      }
+      return res;
+    };
+  }
+  const FISHN = ['', '', 'X-ウィング', 'ソードフィッシュ', 'ジェリーフィッシュ'];
+  function fish(n) {
+    return function (st) {
+      let res = null;
+      for (let d = 1; d <= 9 && !res; d++) for (const [bo, co] of [[0, 9], [9, 0]]) {
+        if (res) break;
+        const lines = [];
+        for (let l = 0; l < 9; l++) { const m = posMask(st, bo + l, d); if (POP[m] >= 2 && POP[m] <= n) lines.push(l); }
+        if (lines.length < n) continue;
+        combos(lines, n, (ls) => {
+          let m = 0; for (const l of ls) m |= posMask(st, bo + l, d);
+          if (POP[m] !== n) return false;
+          const elim = []; const cs = [];
+          for (let k = 0; k < 9; k++) if (m & (1 << k)) for (const c of UNITS[co + k]) {
+            const l = bo ? COL(c) : ROW(c);
+            if (st.cand[c] & (1 << d)) { if (ls.includes(l)) cs.push(c); else elim.push([c, d]); }
+          }
+          if (!elim.length) return false;
+          res = mk(FISHN[n], n === 2 ? 4 : n === 3 ? 4 : 5, [], elim, cs,
+            '数字 ' + d + ' について ' + ls.map((l) => UNAME(bo + l)).join('・') + ' の候補が ' + n + ' 本の' + (bo ? '行' : '列') + 'に収まる');
+          return true;
+        });
+      }
+      return res;
+    };
+  }
+  function xyWing(st) {
+    const bv = []; for (let i = 0; i < 81; i++) if (POP[st.cand[i]] === 2) bv.push(i);
+    for (const p of bv) {
+      const [x, y] = DIGITS[st.cand[p]];
+      for (const a of bv) if (a !== p && SEES[p][a] && (st.cand[a] & (1 << x)) && !(st.cand[a] & (1 << y))) {
+        const z = DIGITS[st.cand[a] & ~(1 << x)][0];
+        const want = (1 << y) | (1 << z);
+        for (const b of bv) if (b !== p && b !== a && SEES[p][b] && st.cand[b] === want) {
+          const elim = [];
+          for (let c = 0; c < 81; c++) if (c !== a && c !== b && SEES[a][c] && SEES[b][c] && (st.cand[c] & (1 << z))) elim.push([c, z]);
+          if (elim.length) return mk('XY-ウィング', 4, [], elim, [p, a, b],
+            '軸 ' + cn(p) + '{' + x + y + '}、羽 ' + cn(a) + '{' + x + z + '}・' + cn(b) + '{' + y + z + '}：どちらかの羽が必ず ' + z);
+        }
+      }
+    }
+    return null;
+  }
+  function xyzWing(st) {
+    for (let p = 0; p < 81; p++) if (POP[st.cand[p]] === 3) {
+      const pc = st.cand[p];
+      const wings = PEERS[p].filter((c) => POP[st.cand[c]] === 2 && (st.cand[c] & pc) === st.cand[c]);
+      for (let i = 0; i < wings.length; i++) for (let j = i + 1; j < wings.length; j++) {
+        const a = wings[i], b = wings[j];
+        if (st.cand[a] === st.cand[b] || (st.cand[a] | st.cand[b]) !== pc) continue;
+        const z = DIGITS[st.cand[a] & st.cand[b]][0];
+        const elim = [];
+        for (let c = 0; c < 81; c++) if (c !== p && c !== a && c !== b && SEES[p][c] && SEES[a][c] && SEES[b][c] && (st.cand[c] & (1 << z))) elim.push([c, z]);
+        if (elim.length) return mk('XYZ-ウィング', 4, [], elim, [p, a, b], '軸 ' + cn(p) + ' と羽 ' + cn(a) + '・' + cn(b) + ' のどれかが必ず ' + z);
+      }
+    }
+    return null;
+  }
+  function wWing(st) {
+    const bv = []; for (let i = 0; i < 81; i++) if (POP[st.cand[i]] === 2) bv.push(i);
+    for (let i = 0; i < bv.length; i++) for (let j = i + 1; j < bv.length; j++) {
+      const a = bv[i], b = bv[j];
+      if (st.cand[a] !== st.cand[b] || SEES[a][b]) continue;
+      for (const x of DIGITS[st.cand[a]]) {
+        const y = DIGITS[st.cand[a] & ~(1 << x)][0];
+        for (let u = 0; u < 27; u++) {
+          const cs = UNITS[u].filter((c) => st.cand[c] & (1 << x));
+          if (cs.length !== 2) continue;
+          const [p, q] = cs;
+          if (p === a || p === b || q === a || q === b) continue;
+          if (!((SEES[a][p] && SEES[b][q]) || (SEES[a][q] && SEES[b][p]))) continue;
+          const elim = [];
+          for (let c = 0; c < 81; c++) if (c !== a && c !== b && SEES[a][c] && SEES[b][c] && (st.cand[c] & (1 << y))) elim.push([c, y]);
+          if (elim.length) return mk('W-ウィング', 4, [], elim, [a, b, p, q],
+            cn(a) + '・' + cn(b) + ' は共に {' + x + y + '}、' + UNAME(u) + ' の ' + x + ' の強リンクで結ばれ、どちらかが必ず ' + y);
+        }
+      }
+    }
+    return null;
+  }
+  function uniqueRect(st) {
+    for (let r1 = 0; r1 < 9; r1++) for (let r2 = r1 + 1; r2 < 9; r2++) for (let c1 = 0; c1 < 9; c1++) for (let c2 = c1 + 1; c2 < 9; c2++) {
+      const cs = [r1 * 9 + c1, r1 * 9 + c2, r2 * 9 + c1, r2 * 9 + c2];
+      const boxes = new Set(cs.map(BOX)); if (boxes.size !== 2) continue;
+      if (cs.some((c) => st.grid[c])) continue;
+      let m = ALL; for (const c of cs) m &= st.cand[c];
+      if (POP[m] !== 2) continue;
+      const extra = cs.filter((c) => st.cand[c] !== m);
+      if (extra.length !== 1) continue;
+      const t = extra[0];
+      return mk('ユニーク・レクタングル', 4, [], DIGITS[m].map((d) => [t, d]), cs,
+        cs.filter((c) => c !== t).map(cn).join(',') + ' が {' + DIGITS[m].join('') + '}。' + cn(t) + ' も同じにすると解が2つになる');
+    }
+    return null;
+  }
+
+  // ---------- 連鎖（AIC 系） ----------
+  // ノード = {d, cells}。グループノード＝ブロックと行/列の交差部にある同じ数字の候補のまとまり
+  function nodeName(n) {
+    if (n.cells.length === 1) return cn(n.cells[0]) + '(' + n.d + ')';
+    const rs = [...new Set(n.cells.map(ROW))], cs = [...new Set(n.cells.map(COL))];
+    return 'R' + rs.map((r) => r + 1).join('') + 'C' + cs.map((c) => c + 1).join('') + '(' + n.d + ')';
+  }
+  function chainSearch(st, mode, grouped) {
+    const nodes = []; const single = new Int32Array(810).fill(-1);
+    for (let c = 0; c < 81; c++) for (const d of DIGITS[st.cand[c]]) { single[c * 10 + d] = nodes.length; nodes.push({ d, cells: [c] }); }
+    if (grouped) for (let b = 0; b < 9; b++) for (let d = 1; d <= 9; d++) {
+      const inBox = UNITS[18 + b].filter((c) => st.cand[c] & (1 << d));
+      for (const f of [ROW, COL]) {
+        const g = {}; for (const c of inBox) (g[f(c)] = g[f(c)] || []).push(c);
+        for (const k in g) if (g[k].length >= 2 && g[k].length < inBox.length + 1) nodes.push({ d, cells: g[k], grp: true });
+      }
+    }
+    const N = nodes.length;
+    const byDigit = Array.from({ length: 10 }, () => []);
+    nodes.forEach((n, i) => byDigit[n.d].push(i));
+    // 弱リンク（同時に真になれない）
+    const weakD = Array.from({ length: N }, () => []); // 同じ数字
+    for (let d = 1; d <= 9; d++) {
+      const l = byDigit[d];
+      for (let i = 0; i < l.length; i++) for (let j = i + 1; j < l.length; j++) {
+        const A = nodes[l[i]], B = nodes[l[j]]; let ok = true;
+        for (const a of A.cells) { for (const b of B.cells) if (a === b || !SEES[a][b]) { ok = false; break; } if (!ok) break; }
+        if (ok) { weakD[l[i]].push(l[j]); weakD[l[j]].push(l[i]); }
+      }
+    }
+    const weakC = (i, out) => { // 同じマスの別数字（単独ノードのみ）
+      const n = nodes[i]; if (n.cells.length !== 1) return out;
+      const c = n.cells[0]; for (const e of DIGITS[st.cand[c]]) if (e !== n.d) out.push(single[c * 10 + e]);
+      return out;
+    };
+    // 強リンク（どちらかは必ず真）
+    const strong = Array.from({ length: N }, () => []);
+    if (mode !== 'X') for (let c = 0; c < 81; c++) if (POP[st.cand[c]] === 2) {
+      const [x, y] = DIGITS[st.cand[c]]; const a = single[c * 10 + x], b = single[c * 10 + y];
+      strong[a].push(b); strong[b].push(a);
+    }
+    if (mode !== 'XY') for (let u = 0; u < 27; u++) for (let d = 1; d <= 9; d++) {
+      const P = UNITS[u].filter((c) => st.cand[c] & (1 << d)); if (P.length < 2) continue;
+      if (P.length === 2) { const a = single[P[0] * 10 + d], b = single[P[1] * 10 + d]; strong[a].push(b); strong[b].push(a); continue; }
+      if (!grouped) continue;
+      const inU = byDigit[d].filter((i) => nodes[i].cells.every((c) => CU[c].includes(u)));
+      for (let i = 0; i < inU.length; i++) for (let j = i + 1; j < inU.length; j++) {
+        const A = nodes[inU[i]], B = nodes[inU[j]];
+        if (!A.grp && !B.grp) continue;
+        if (A.cells.length + B.cells.length !== P.length) continue;
+        if (A.cells.some((c) => B.cells.includes(c))) continue;
+        strong[inU[i]].push(inU[j]); strong[inU[j]].push(inU[i]);
+      }
+    }
+    const weakAll = (i, out) => { out.length = 0; for (const w of weakD[i]) out.push(w); return weakC(i, out); };
+    const weakMode = (i, out) => { out.length = 0; for (const w of weakD[i]) out.push(w); if (mode === 'AIC') weakC(i, out); return out; };
+    let best = null; const mark = new Uint8Array(N); const tmp = [], tmp2 = [];
+    const par = new Int32Array(N * 2), dep = new Int32Array(N * 2);
+    for (let s = 0; s < N; s++) {
+      if (!strong[s].length) continue;
+      mark.fill(0); for (const w of weakAll(s, tmp)) mark[w] = 1;
+      par.fill(-2); par[s * 2] = -1; dep[s * 2] = 0; const q = [s * 2]; let qi = 0;
+      const maxLen = best ? best.len : 30;
+      while (qi < q.length) {
+        const sv = q[qi++]; const n = sv >> 1, on = sv & 1; const dp = dep[sv];
+        if (dp + 1 >= maxLen + (best ? 0 : 1)) break;
+        if (!on) {
+          for (const t of strong[n]) {
+            const k = t * 2 + 1; if (par[k] !== -2) continue;
+            par[k] = sv; dep[k] = dp + 1; q.push(k);
+            if (t === s) continue;
+            const elim = [];
+            for (const w of weakAll(t, tmp2)) if (mark[w] && w !== s && nodes[w].cells.length === 1) elim.push([nodes[w].cells[0], nodes[w].d]);
+            if (elim.length && (!best || dp + 1 < best.len)) {
+              const path = []; let x = k; while (x !== -1) { path.push(x >> 1); x = par[x]; }
+              best = { len: dp + 1, path: path.reverse(), elim };
+            }
+          }
+        } else {
+          for (const t of weakMode(n, tmp)) { const k = t * 2; if (par[k] !== -2) continue; par[k] = sv; dep[k] = dp + 1; q.push(k); }
+        }
+      }
+    }
+    if (!best) return null;
+    const p = best.path.map((i) => nodes[i]);
+    const usesGroup = p.some((n) => n.grp);
+    const names = { X: 'X-チェーン', XY: 'XY-チェーン', AIC: 'AIC（交互推論チェーン）' };
+    const lv = usesGroup ? 6 : { X: 5, XY: 5, AIC: 6 }[mode];
+    const txt = p.map((n, i) => (i ? (i % 2 ? ' ＝ ' : ' － ') : '') + nodeName(n)).join('');
+    const seen = new Set(); const elim = best.elim.filter(([c, d]) => { const k = c * 10 + d; if (seen.has(k)) return false; seen.add(k); return true; });
+    return mk((usesGroup ? 'グループ' : '') + names[mode], lv, [], elim, [...new Set(p.flatMap((n) => n.cells))],
+      '連鎖 ' + txt + '（＝は「どちらかは必ず真」、－は「両方は真にならない」）。よって両端のどちらかが必ず真', best.path);
+  }
+  const xChain = (st) => chainSearch(st, 'X', false);
+  const xyChain = (st) => chainSearch(st, 'XY', false);
+  const aic = (st) => chainSearch(st, 'AIC', false);
+  const groupedAic = (st) => chainSearch(st, 'AIC', true);
+
+  // ---------- ALS-XZ ----------
+  function alsXZ(st) {
+    const als = []; const seenKey = new Set();
+    for (let u = 0; u < 27; u++) {
+      const cells = UNITS[u].filter((c) => !st.grid[c]);
+      for (let n = 1; n <= Math.min(5, cells.length - 1); n++) combos(cells, n, (cs) => {
+        let m = 0; for (const c of cs) m |= st.cand[c];
+        if (POP[m] !== n + 1) return false;
+        const key = cs.join(','); if (seenKey.has(key)) return false; seenKey.add(key);
+        const has = new Uint8Array(81); for (const c of cs) has[c] = 1;
+        const dc = []; for (const d of DIGITS[m]) dc[d] = cs.filter((c) => st.cand[c] & (1 << d));
+        als.push({ cs, m, has, dc, u });
+        return false;
+      });
+    }
+    als.sort((a, b) => a.cs.length - b.cs.length);
+    let best = null;
+    for (let i = 0; i < als.length; i++) for (let j = i + 1; j < als.length; j++) {
+      const A = als[i], B = als[j];
+      if (best && A.cs.length + B.cs.length >= best.size) continue;
+      const common = A.m & B.m; if (POP[common] < 2) continue;
+      if (A.cs.some((c) => B.has[c])) continue;
+      for (const x of DIGITS[common]) {
+        let rcc = true;
+        for (const a of A.dc[x]) { for (const b of B.dc[x]) if (!SEES[a][b]) { rcc = false; break; } if (!rcc) break; }
+        if (!rcc) continue;
+        const elim = [];
+        for (const z of DIGITS[common & ~(1 << x)]) {
+          const zc = A.dc[z].concat(B.dc[z]);
+          for (const c of PEERS[zc[0]]) if (!A.has[c] && !B.has[c] && (st.cand[c] & (1 << z)) && zc.every((q) => SEES[q][c])) elim.push([c, z]);
+        }
+        if (elim.length) {
+          best = { size: A.cs.length + B.cs.length, step: mk('ALS-XZ', 6, [], elim, A.cs.concat(B.cs),
+            'ALS A＝' + A.cs.map(cn).join(',') + '{' + DIGITS[A.m].join('') + '}、ALS B＝' + B.cs.map(cn).join(',') + '{' + DIGITS[B.m].join('') + '}。' +
+            x + ' は両方には入れないので、A か B のどちらかは ' + x + ' 抜きで埋まり、' + DIGITS[common & ~(1 << x)].join('・') + ' のうち共通の数字が必ずどちらかに入る') };
+          break;
+        }
+      }
+    }
+    return best ? best.step : null;
+  }
+
+  const TECHS = [nakedSingle, hiddenSingle, lockedCandidates, nakedSubset(2), hiddenSubset(2), nakedSubset(3), hiddenSubset(3),
+    fish(2), xyWing, xyzWing, uniqueRect, wWing, fish(3), nakedSubset(4), hiddenSubset(4), fish(4), xChain, xyChain, aic, alsXZ, groupedAic];
+
+  function nextStep(st, maxLevel) {
+    for (const t of TECHS) {
+      const s = t(st);
+      if (s && (s.place.length || s.elim.length)) { if (maxLevel && s.level > maxLevel) return null; return s; }
+    }
+    return null;
+  }
+  // 理詰めで解く。返り値 { solved, steps, maxLevel, score, grid }
+  const WEIGHT = [0, 1, 4, 10, 30, 80, 150];
+  function solveLogic(grid, opts) {
+    opts = opts || {};
+    const st = makeState(grid); if (!st) return { solved: false, steps: [], error: 'conflict' };
+    const steps = []; let maxLevel = 0, score = 0;
+    while (!solved(st)) {
+      if (broken(st)) return { solved: false, steps, error: 'broken', maxLevel, score };
+      const s = nextStep(st, opts.maxLevel);
+      if (!s) return { solved: false, steps, maxLevel, score, stuck: true };
+      apply(st, s);
+      if (!opts.noRecord) steps.push(s);
+      if (s.level > maxLevel) maxLevel = s.level;
+      score += WEIGHT[s.level];
+    }
+    return { solved: true, steps, maxLevel, score, grid: Array.from(st.grid) };
+  }
+
+  // ---------- 総当たり（唯一解チェック・生成用） ----------
+  function countSolutions(grid, limit) {
+    limit = limit || 2;
+    const g = Int8Array.from(grid);
+    const rows = new Uint16Array(9), cols = new Uint16Array(9), boxs = new Uint16Array(9);
+    for (let i = 0; i < 81; i++) if (g[i]) {
+      const b = 1 << g[i]; const r = ROW(i), c = COL(i), x = BOX(i);
+      if ((rows[r] | cols[c] | boxs[x]) & b) return 0;
+      rows[r] |= b; cols[c] |= b; boxs[x] |= b;
+    }
+    let count = 0; let sol = null;
+    const BI = []; for (let i = 0; i < 81; i++) BI.push([ROW(i), COL(i), BOX(i)]);
+    (function rec() {
+      let best = -1, bm = 0, bc = 10;
+      for (let i = 0; i < 81; i++) if (!g[i]) {
+        const [r, c, x] = BI[i]; const m = ALL & ~(rows[r] | cols[c] | boxs[x]); const p = POP[m];
+        if (p < bc) { bc = p; best = i; bm = m; if (p <= 1) break; }
+      }
+      if (best < 0) { count++; if (!sol) sol = Array.from(g); return count >= limit; }
+      if (!bm) return false;
+      const [r, c, x] = BI[best];
+      for (const d of DIGITS[bm]) {
+        const b = 1 << d; g[best] = d; rows[r] |= b; cols[c] |= b; boxs[x] |= b;
+        if (rec()) return true;
+        g[best] = 0; rows[r] &= ~b; cols[c] &= ~b; boxs[x] &= ~b;
+      }
+      return false;
+    })();
+    return { count, solution: sol };
+  }
+
+  const API = { UNITS, PEERS, SEES, ROW, COL, BOX, DIGITS, POP, makeState, clone, place, apply, nextStep, solveLogic, countSolutions, cn };
+  if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.SudokuSolver = API;
+})(this);
+
+</script>
+<script>
+const PUZZLES = {"nan":[["300040108084019730010000000021490000700000200090050000000600007102900050960080000","375246198684519732219378564821493675753861249496752381538624917142937856967185423",223],["012005070080000060500080100009030007020007001170060432200000000800403010006010300","312695874984721563567384129459132687623847951178569432231956748895473216746218395",266],["706000001040087260009060040000000000001005036000230070010074603050600008000300420","726543981143987265589162347438716592271495836695238174912874653354629718867351429",280],["908003000300578000400000380000600075000390000040207900020000008500810260000030400","918463527362578194457129386239641875781395642645287913124956738573814269896732451",281],["040001000702080009001000005000906050080007030205408000407003680600000004000002070","549361827732584169861729345374916258986257431215438796457193682623875914198642573",332],["000150009000400700000029060180900005056071300000000010008090006002004000943610020","674153289291468753835729164187932645456871392329546817718295436562384971943617528",336],["001600000002010000000729060005000300010030082903100700040095003050071200000046800","891653427762418539534729168425987316617534982983162745148295673356871294279346851",368],["028090003000020080000800400002659008005200970890417500080000000001000705067100000","128794653349526187756831492472659318615283974893417526984375261231968745567142839",385],["800530040579000300004000805600000250008007004090210000003900006000862500000000090","812536749579184362364729815637498251128657934495213687783945126941862573256371498",405],["040000096610090070002006040000500000000710000009003052304000009025080000001040507","748235196613894275592176348437528961256719483189463752374651829925387614861942537",448],["000200604102500000000003520005300062060050300403007800000000000004130279030800006","358279614142586937976413528895341762267958341413627895529764183684135279731892456",472],["000230080428100009300000005600000000002041003080309500850012406000006108006000050","795234681428165379361897245639528714572641893184379562857912436943756128216483957",503],["500090040002060000600500003890247000006800200200050070408001700060000400903080000","537192846182463597649578123895247361376819254214356978458621739761935482923784615",507],["300040000470930010092100000040001005007000000030506840054800230600000970003000000","316245798475938612892167453248791365567483129139526847754819236681352974923674581",519],["060200000020006300070530209700083500000650008080000001200060040000020100901370002","369247815825916374174538269712483596493651728586792431238165947647829153951374682",542],["000702004002058070070100000096407003008000060200006041005000430300004005600005007","951762384462358179873149526196427853548913762237586941725691438389274615614835297",576],["009028001100000030028003500000060000000004805094000070067480000000030600042906080","439528761175649238628713594253867419716394825894152376367481952981235647542976183",597],["002078000700061240000009000000716028000000001010004903001600000850000610600100504","142578396798361245563429187935716428486293751217854963321645879854937612679182534",674],["970000000400083100008000000001960030300024001507030060000070300004300070700240986","975612843462783159138459627241967538386524791597138462629875314814396275753241986",701],["007490000053070200010080000690300045070000000100050306000809100700040009000730008","267495813853176294419283567692318745375624981148957326534869172781542639926731458",805],["080000206200006500000050081007600300008000040030420000860092700700540000000067093","589134276214786539376259481947615328128973645635428917861392754793541862452867193",836],["000374981140059007009010000000000008010900020004000600580006400306005000400000070","652374981148259367739618245963427158815963724274581693587196432326745819491832576",837],["500000200001600050097000108100890000068271500000000001020040000710003000840006003","534718269281639457697452138152894376368271594479365821923147685716583942845926713",847],["060002087008309200000000390000001079000070005006000800002006048090040000000528901","963452187718369254524187396285631479139874625476295813352916748891743562647528931",891],["400078100790504030000200704200700001080020000000049500003007600107030408060000000","426378159798514236315296784239765841584123967671849523843957612157632498962481375",918],["200700400080003007005008390400005900000190700009002030000000100500801040006200005","263719458984523617715648392421375986358196724679482531842957163537861249196234875",1062],["608017300709000008040000507010006000000090000000270406020003904400000870800004005","658417329739652148142839567917546283264398751385271496526783914493165872871924635",1297]],"cho":[["700000008630007900418000070800040000000205040000970300001000257970000006000710090","729461538635827914418593672893146725167235849254978361341689257972354186586712493",1923],["000056720987000000005307000040000601506000000030260000000078304004501800000000090","413856729987412536625397418249735681576189243831264975162978354394521867758643192",1924],["000080004000240060009053000800096053001500000590028000430000905700000006900000830","273681594158249367649753128824196753361574289597328641436812975782935416915467832",1945],["706500000040087260000000040000000000201400030005208074912000603050020010007301020","726543981143987265589162347438716592271495836695238174912874653354629718867351429",2087],["004000700002050000380100040000800100000600027209005060020060410070040000540009003","164938752792456381385172946657824139418693527239715864923567418876341295541289673",2214],["060200300700189062000000000257608093006003008000050020600500000008001070001800900","865247319734189562912365847257618493146923758389754621673592184598431276421876935",2230],["000540080008030400005020100090200000000003900806400070074016032000000614600300000","269541387718639425345827196197268543452173968836495271574916832983752614621384759",2311],["040000600530010847600000003006800200050030700000561080060750018000000970700009000","147328695532916847698475123316897254859234761274561389963752418425183976781649532",2312],["006004800000107000000009057005072001008000004010040300804003090030490600060005000","176254839593187246482369157345872961628931574719546328854613792237498615961725483",2552],["006000002020900000000003080090000070200810405408000200019600000500401630600080700","376148952821957364954263187195324876237816495468795213719632548582471639643589721",2586],["000008000020060570736259080573800009004030000600000000000000600068007050010000020","145378296829461573736259184573812469294736815681594732952183647468927351317645928",2592],["023040080000108090001003004000307041006094050000000009200000000304050010600009007","723946185465178293981523674592367841136894752847215369259781436374652918618439527",2604],["000000809710000003860040027000200038080063000500400000000900005071802390000070002","354721869712689453869345127146297538287563941593418276428936715671852394935174682",2613],["024003010000090040001240538006004000009020003080530006175000090003000700000300000","724853619358691247691247538236184975519726483487539126175468392863912754942375861",2663],["307090008084000095000008107090810050870040000000300000030080070048006002062000480","327591648184763295659428137496812753873645921215379864931284576748956312562137489",2699],["000001020702080109001700005304900008006007430000000000407000600020870000000040003","549361827732584169861729345374916258986257431215438796457193682623875914198642573",2747],["001200608800900027320080001700060100040100006000020970000300460000000000903000015","591237648864915327327486591739864152245179836618523974172358469456791283983642715",2789],["710460900600010405000008007060000500003050001200003700500906000080000006906020000","718465923639712485425398617167249538893657241254183769541936872382574196976821354",2860],["302000008560020000040009060000400006600075900000006020050003004100000309480700600","392647518567128493841539267915482736628375941734916825259863174176254389483791652",3148],["100940020000000006080063400000030600200601093008000051005090080020000060900700500","163947825497825316582163479719532648254681793638479251375296184821354967946718532",3150],["300500000000090400000304600000056070450000800602410009069700000030020000100005008","346582197578691423291374685913856274457239861682417359869743512735128946124965738",3219],["000000080320500610001000043090007060000090700000640008240030001700050006008020070","965413287324578619871269543192387465486195732537642198249736851713854926658921374",3326],["000004000002693400900007100307900005060700000280400900098000002700000001500000300","836154729172693458954287136317928645469715283285436917698341572743562891521879364",3375],["602430000080006094070000600007000003050004018000000006700003000200970060500268000","692437185183526794475819632927681453356794218841352976768143529234975861519268347",3440],["008507020000904000009120005007000350092000004004000102070002000040706280001000500","418567923256934817739128645167249358592381764384675192675812439943756281821493576",3479],["207080000006000050003079204060000000030040008000203041300004010600005400080000003","257486139946321857813579264462918375531647928798253641325894716679135482184762593",3717],["060170000000000500004039001608020900700080400090000000010390086006700300309006005","963175824127648593584239671638421957751983462492567138215394786846752319379816245",3973],["700034060050001008002070000270080003000000092009400001000005006900800010635000000","798234165453691728162578349271986453546317892389452671814725936927863514635149287",4389],["009005200600080010000400008700040100810069003000007000900070000060000002207300400","189635247643782915572491638725843196814569723396127854938274561461958372257316489",4686],["000300008000087090050601003370100005000000061019030000000003459004060000000008006","967324518143587692852691743378146925425879361619235874286713459534962187791458236",5591]],"kyoku":[["070028000900005200002049010450001000080000021000007504005070138013080490000000600","176328945948615273532749816457261389689453721321897564265974138713586492894132657",1719],["000000000500100020410020076803200700200008090007005000080953000900001080000082950","326847519579136428418529376893214765265378194147695832782953641954761283631482957",1719],["900506000008000060000820000090003007082010530007000600200905010070000026004000900","941536872728194365356827149195463287682719534437258691263945718579381426814672953",2015],["065001840901007250002090000000106000000000001016080005690003008053008090008900070","765231849931847256842695137279156384584372961316489725697523418453718692128964573",2117],["000000000640200058032000607070140090100000075050007801060002080000910000005003002","781536924649271358532489617378145296196328475254697831463752189827914563915863742",2729],["000000700070000054800001320702500000650000002300820540006095003000402105500030000","269354718173289654845671329782543961654917832391826547416795283938462175527138496",2736],["010003008079000200006090004000002000690008700000600010005000080060031020000400930","514273698379864251286195374843712569691358742752649813435927186968531427127486935",2942],["430070208000004010000080004100000902700002000290500030514000763000016025020005000","431679258982354617657281394165843972743192586298567431514928763379416825826735149",2947],["500600704600100000000009800000581200000007540059400000408005072006002403005000000","591638724682174395347259816764581239123967548859423167418395672976812453235746981",2957],["000710000728400001004000070000005600000023040800970020003590007450000000609000300","365719284728456931914238576247185693591623748836974125183592467452367819679841352",2964],["000040800100500000740000053800000006072400300000030705006801004000050901010000630","365147892128593467749268153853719246672485319491632785936871524284356971517924638",3108],["000020307000006400530000016003407800458000000000000001600009004027000100040001068","961524387782136495534798216193467852458912673276853941615389724827645139349271568",3116],["500082000006009007920000800100000008000020961060008040001340600000000014470001500","517682493386459127924713856145976238738524961269138745891345672652897314473261589",3133],["605200400240000100081040700100760203020003040060002900700000010000090004000820300","675281439243579186981346725194768253527913648368452971759634812832197564416825397",3176],["001203005072051040058670021000000050080700000100090006000436000060020003500007004","691243875372851649458679321246318957985764132137592486729436518864125793513987264",3239],["600070008080001000070690510000700800400016000700004060000540290040007105530100000","621375948985421673374698512162739854453816729798254361817543296246987135539162487",3288],["400080090920504006100000003260370000309000000780060001500008207600000009890100004","476283195923514786158697423261379548349851672785462931514938267632745819897126354",3367],["430005807000000000006100900020300040603002090005080300057001400060030009004709600","431295867598673214276148953729316548683452791145987326957861432862534179314729685",3478],["006029570900004000020160000031000080009000002650003000103040009000600007007032060","416829573978354216325167948731296485849571632652483791163745829294618357587932164",3515],["005009702300064100008050000030970000000002593500000000150026300007103000003500410","465819732379264158218357964836975241741682593592431876154726389987143625623598417",3583],["009308200600000084008200001004009100800000000030000065070000549006001030000570000","719348256625197384348256791564739128892615473137482965271863549456921837983574612",3589],["070001094010050600008000010009040001027500080005003070000000060090205007000060200","576821394914357628238496715869742531327519486145683972452978163691235847783164259",3851],["030004000059000800400800100920050300007001000000600090000005020005263700000080060","638514279159726834472839156926458317547391682381672495763145928895263741214987563",3898],["580020000009060248000308090020000057050800010008070000003081000000230480860000009","584129763139567248672348195926413857357892614418675932243981576795236481861754329",4002],["006203007002017390070000024009000000700004000008700002000006009005008010094030008","956243187482617395173859624569382741721594863348761952817426539235978416694135278",4702],["900064800005200000030109000060020000200003064308070000700602000090040006026010030","972564813185237649634189527567421398219853764348976152753692481891345276426718935",4757],["000025006060300100700006080530200009002000060040908000001500678000002000400080320","319825746865374192724196583538267419972431865146958237291543678683712954457689321",4847],["900005000850600009064080000200068003000300061000041000000002100008006070507030006","973415682852673419164289357291568743485327961736941825649752138328196574517834296",5098],["000500090800340050006027100002010008000005020040000060100470002000030000704050000","213568497879341256456927183392614578681795324547283961165479832928136745734852619",5190],["800070000035000000790008000006700050000100004079042030000020100000017980020800003","864271395235964718791538426416783259382159674579642831948325167653417982127896543",5899]]};
+const S = window.SudokuSolver;
+const TIERS = {
+  nan:{name:'難問',color:'var(--nan)',desc:'X-チェーン・XY-チェーン（同じ数字／候補2つのマスをたどる連鎖）が必要な問題。'},
+  cho:{name:'超難問',color:'var(--cho)',desc:'数字とマスをまたぐ長い連鎖（AIC）を何度も使う問題。'},
+  kyoku:{name:'極',color:'var(--kyoku)',desc:'グループ連鎖やALSが必要で、長い連鎖を何十回も使う問題。試し入れ不要。'}
+};
+const $ = (id) => document.getElementById(id);
+const store = { get(){ try{ return JSON.parse(localStorage.getItem('rizume_np_v3')||'{}'); }catch(e){ return {}; } },
+  set(o){ try{ localStorage.setItem('rizume_np_v3', JSON.stringify(o)); }catch(e){} } };
+let DB = store.get(); DB.prog = DB.prog || {};
+
+let tier = DB.tier && PUZZLES[DB.tier] ? DB.tier : 'nan';
+let idx = Number.isInteger(DB.idx) ? DB.idx : 0;
+let givens, sol, cells, undoStack, redoStack, elapsed, hintsUsed, cleared, mode = 'fix', sel = -1;
+let wrongMark = new Set(), hint = null;
+
+const key = () => tier + ':' + idx;
+function load(t, i){
+  tier = t; idx = i;
+  const [p, s] = PUZZLES[tier][idx];
+  givens = [...p].map(Number); sol = [...s].map(Number);
+  const pr = DB.prog[key()];
+  cells = givens.map((g, k) => ({ v: g, tent: false, memo: 0 }));
+  if (pr && pr.c) pr.c.forEach((c, k) => { if (!givens[k]) cells[k] = { v: c[0], tent: !!c[1], memo: c[2] }; });
+  else if (pr && pr.done) cells = sol.map((v) => ({ v, tent: false, memo: 0 }));
+  elapsed = pr ? pr.t || 0 : 0; hintsUsed = pr ? pr.h || 0 : 0; cleared = !!(pr && pr.done);
+  undoStack = []; redoStack = []; wrongMark.clear(); hint = null; showHint(null);
+  DB.tier = tier; DB.idx = idx; save();
+  $('sub').innerHTML = '<span style="color:' + TIERS[tier].color + ';font-weight:700">' + TIERS[tier].name + '</span> No.' + (idx + 1);
+  $('pickBtn').style.background = TIERS[tier].color;
+  render();
+}
+function save(){
+  const k = key(); const old = DB.prog[k] || {};
+  DB.prog[k] = Object.assign(old, { c: cells.map((c) => [c.v, c.tent ? 1 : 0, c.memo]), t: elapsed, h: hintsUsed, done: cleared || old.done });
+  store.set(DB);
+}
+
+// ---- 盤面描画 ----
+const board = $('board'); const cellEls = [];
+for (let i = 0; i < 81; i++) {
+  const d = document.createElement('div'); d.className = 'cell c' + (i % 9) + ' r' + Math.floor(i / 9);
+  d.addEventListener('pointerdown', (e) => { e.preventDefault(); sel = i; render(); });
+  board.appendChild(d); cellEls.push(d);
+}
+const pad = $('pad');
+for (let d = 1; d <= 9; d++) { const b = document.createElement('button'); b.dataset.d = d; b.innerHTML = d + '<small></small>'; b.onclick = () => input(d); pad.appendChild(b); }
+
+function conflicts(){
+  const bad = new Set();
+  for (const u of S.UNITS) { const m = {}; for (const c of u) { const v = cells[c].v; if (v) (m[v] = m[v] || []).push(c); }
+    for (const v in m) if (m[v].length > 1) m[v].forEach((c) => bad.add(c)); }
+  return bad;
+}
+function render(){
+  const bad = conflicts();
+  const sv = sel >= 0 ? cells[sel].v : 0;
+  const hc = new Set(hint && hint.step ? hint.step.cells : []);
+  const htPlace = new Map(), htElim = new Map();
+  if (hint && hint.step) { for (const [c, d] of hint.step.place) htPlace.set(c, d); for (const [c, d] of hint.step.elim) htElim.set(c, (htElim.get(c) || 0) | (1 << d)); }
+  for (let i = 0; i < 81; i++) {
+    const c = cells[i], el = cellEls[i]; let cls = 'cell c' + (i % 9) + ' r' + Math.floor(i / 9);
+    if (sel >= 0 && i !== sel && S.SEES[sel][i]) cls += ' rel';
+    if (sv && c.v === sv && i !== sel) cls += ' same';
+    if (i === sel) cls += ' sel';
+    if (hc.has(i)) cls += ' hintc';
+    if (htPlace.has(i) || htElim.has(i)) cls += ' hintt';
+    if (wrongMark.has(i)) cls += ' wrong';
+    el.className = cls;
+    if (c.v) {
+      const k = givens[i] ? 'given' : c.tent ? 'tent' : 'user';
+      el.innerHTML = '<span class="v ' + k + (bad.has(i) ? ' conf' : '') + '">' + c.v + '</span>';
+    } else {
+      let memo = c.memo, show = memo;
+      const hp = htPlace.get(i), he = htElim.get(i) || 0;
+      if (hp) show |= 1 << hp;
+      show |= he;
+      if (!show) { el.innerHTML = ''; continue; }
+      let h = '<div class="memo">';
+      for (let d = 1; d <= 9; d++) {
+        const on = show & (1 << d);
+        let k = '';
+        if (on) { if (hp === d) k = 'pk'; else if (he & (1 << d)) k = 'el'; else if (sv === d) k = 'hl'; }
+        h += '<span class="' + k + '">' + (on ? d : '') + '</span>';
+      }
+      el.innerHTML = h + '</div>';
+    }
+  }
+  const cnt = Array(10).fill(0); cells.forEach((c) => { if (c.v && !c.tent) cnt[c.v]++; });
+  [...pad.children].forEach((b) => { const d = +b.dataset.d; b.classList.toggle('done', cnt[d] >= 9); b.querySelector('small').textContent = cnt[d] >= 9 ? '' : (9 - cnt[d]); });
+  pad.className = 'pad ' + (mode === 'fix' ? '' : 'm-' + mode);
+  $('undoBtn').disabled = !undoStack.length; $('redoBtn').disabled = !redoStack.length;
+  document.querySelectorAll('#modes button').forEach((b) => b.classList.toggle('on', b.dataset.m === mode));
+}
+
+// ---- 変更・履歴 ----
+const snap = (i) => ({ v: cells[i].v, tent: cells[i].tent, memo: cells[i].memo });
+const same = (a, b) => a.v === b.v && a.tent === b.tent && a.memo === b.memo;
+function commit(fn){ // fn は cells を直接書き換える。差分を1手として記録
+  const before = cells.map((c) => ({ v: c.v, tent: c.tent, memo: c.memo }));
+  fn();
+  const ch = [];
+  for (let i = 0; i < 81; i++) if (!same(before[i], cells[i])) ch.push([i, before[i], snap(i)]);
+  if (!ch.length) return false;
+  undoStack.push({ ch, sel }); if (undoStack.length > 2000) undoStack.shift();
+  redoStack = []; wrongMark.clear(); hint = null; showHint(null);
+  afterChange(); return true;
+}
+function afterChange(){ save(); render(); checkClear(); }
+function undo(){ const a = undoStack.pop(); if (!a) return; for (const [i, b] of a.ch) cells[i] = Object.assign({}, b); redoStack.push(a); sel = a.sel; wrongMark.clear(); hint = null; showHint(null); afterChange(); }
+function redo(){ const a = redoStack.pop(); if (!a) return; for (const [i, , b] of a.ch) cells[i] = Object.assign({}, b); undoStack.push(a); sel = a.sel; wrongMark.clear(); hint = null; showHint(null); afterChange(); }
+
+function clearPeerMemo(i, d){ for (const p of S.PEERS[i]) if (!cells[p].v) cells[p].memo &= ~(1 << d); }
+function input(d){
+  if (sel < 0) { toast('マスを選んでください'); return; }
+  if (givens[sel] || cleared && !cells[sel].tent && cells[sel].v) return;
+  const i = sel;
+  commit(() => {
+    const c = cells[i];
+    if (mode === 'memo') { if (c.v) return; c.memo ^= 1 << d; return; }
+    const tent = mode === 'tent';
+    if (c.v === d && c.tent === tent) { c.v = 0; c.tent = false; return; }
+    c.v = d; c.tent = tent;
+    if (!tent && $('autoRm').checked) clearPeerMemo(i, d);
+  });
+}
+function erase(){
+  if (sel < 0 || givens[sel]) return; const i = sel;
+  commit(() => { const c = cells[i]; if (c.v) { c.v = 0; c.tent = false; } else c.memo = 0; });
+}
+function candidatesNow(includeTent){
+  const g = cells.map((c) => (c.v && (includeTent || !c.tent)) ? c.v : 0);
+  const res = Array(81).fill(0);
+  for (let i = 0; i < 81; i++) if (!g[i]) { let m = 0x3fe; for (const p of S.PEERS[i]) if (g[p]) m &= ~(1 << g[p]); res[i] = m; }
+  return res;
+}
+function autoMemo(){
+  const cand = candidatesNow(false);
+  if (!commit(() => { for (let i = 0; i < 81; i++) if (!cells[i].v) cells[i].memo = cand[i]; })) toast('書き足す候補はありません');
+  else toast('空きマスすべてに候補を書きました');
+}
+function tentFix(){ if (!commit(() => cells.forEach((c, i) => { if (c.tent) { c.tent = false; if ($('autoRm').checked) clearPeerMemo(i, c.v); } }))) toast('仮置きはありません'); }
+function tentClear(){ if (!commit(() => cells.forEach((c) => { if (c.tent) { c.v = 0; c.tent = false; } }))) toast('仮置きはありません'); }
+function check(){
+  wrongMark.clear();
+  cells.forEach((c, i) => { if (c.v && !givens[i] && c.v !== sol[i]) wrongMark.add(i); });
+  render();
+  toast(wrongMark.size ? '間違っているマスが ' + wrongMark.size + ' 個あります' : '今のところ間違いはありません');
+}
+
+// ---- ヒント（論理ソルバー） ----
+function computeHint(){
+  const wrong = []; cells.forEach((c, i) => { if (c.v && !c.tent && c.v !== sol[i]) wrong.push(i); });
+  if (wrong.length) { wrong.forEach((i) => wrongMark.add(i)); return { msg: '確定した数字に間違いがあります（赤いマス）。戻るで直してからもう一度どうぞ。' }; }
+  const lost = []; cells.forEach((c, i) => { if (!c.v && c.memo && !(c.memo & (1 << sol[i]))) lost.push(i); });
+  if (lost.length) { lost.forEach((i) => wrongMark.add(i)); return { msg: 'メモから正しい候補が消えているマスがあります（赤いマス）。メモを直すか「候補を全部書く」で書き直してください。' }; }
+  const g = cells.map((c) => (c.v && !c.tent) ? c.v : 0);
+  const st = S.makeState(g);
+  for (let i = 0; i < 81; i++) if (!g[i] && cells[i].memo && (cells[i].memo & (1 << sol[i]))) st.cand[i] &= cells[i].memo;
+  const step = S.nextStep(st);
+  if (!step) return { msg: '次の一手が見つかりませんでした。' };
+  return { step, cand: st.cand };
+}
+function showHint(h){
+  const box = $('hintbox');
+  if (!h) { box.classList.remove('show'); return; }
+  box.classList.add('show');
+  if (h.msg) { $('hintName').textContent = 'ヒント'; $('hintDesc').textContent = h.msg; $('hintApply').style.display = 'none'; return; }
+  const s = h.step;
+  $('hintName').textContent = s.tech;
+  let d = s.desc;
+  if (s.place.length) d += ' → ' + s.place.map(([c, v]) => S.cn(c) + '=' + v).join('、');
+  else d += ' → 消去：' + s.elim.map(([c, v]) => S.cn(c) + 'の' + v).join('、');
+  $('hintDesc').textContent = d + '（R＝行、C＝列）';
+  $('hintApply').style.display = '';
+}
+function doHint(){
+  if (cleared) { toast('クリア済みです'); return; }
+  const h = computeHint(); hint = h; hintsUsed++; save(); showHint(h); render();
+}
+function applyHint(){
+  if (!hint || !hint.step) return; const s = hint.step, cand = hint.cand;
+  commit(() => {
+    for (const [c, d] of s.elim) { if (!cells[c].memo) cells[c].memo = cand[c]; cells[c].memo &= ~(1 << d); }
+    for (const [c, d] of s.place) { cells[c].v = d; cells[c].tent = false; if ($('autoRm').checked) clearPeerMemo(c, d); }
+  });
+}
+
+// ---- クリア判定・タイマー ----
+function fmt(t){ const h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, s = t % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0'); }
+function checkClear(){
+  if (cleared) return;
+  if (cells.every((c, i) => c.v === sol[i] && !c.tent)) {
+    cleared = true; const pr = DB.prog[key()] || {}; pr.done = true; pr.best = pr.best ? Math.min(pr.best, elapsed) : elapsed; DB.prog[key()] = pr; save();
+    $('clearStat').textContent = TIERS[tier].name + ' No.' + (idx + 1) + '　タイム ' + fmt(elapsed) + '　ヒント ' + hintsUsed + ' 回';
+    openSheet('clearSheet');
+  }
+}
+setInterval(() => { if (!cleared && !document.hidden && !document.querySelector('.sheet.show')) { elapsed++; $('timer').textContent = fmt(elapsed); if (elapsed % 10 === 0) save(); } else $('timer').textContent = fmt(elapsed); }, 1000);
+
+// ---- シート ----
+function openSheet(id){ $(id).classList.add('show'); }
+document.querySelectorAll('.sheet').forEach((s) => s.addEventListener('click', (e) => { if (e.target === s || e.target.hasAttribute('data-close')) s.classList.remove('show'); }));
+let pickTier = tier;
+function renderPick(){
+  $('tabs').innerHTML = ''; for (const t in TIERS) { const b = document.createElement('button'); b.textContent = TIERS[t].name; b.style.background = TIERS[t].color; b.className = t === pickTier ? 'on' : ''; b.onclick = () => { pickTier = t; renderPick(); }; $('tabs').appendChild(b); }
+  $('tierDesc').textContent = TIERS[pickTier].desc + '（番号が大きいほど難しめ）';
+  $('nums').innerHTML = '';
+  PUZZLES[pickTier].forEach((_, i) => {
+    const pr = DB.prog[pickTier + ':' + i]; const b = document.createElement('button');
+    b.className = (pr && pr.done ? 'clr' : '') + (pickTier === tier && i === idx ? ' cur' : '');
+    b.innerHTML = (i + 1) + '<small>' + (pr && pr.done ? '✓ ' + fmt(pr.best || pr.t || 0) : pr && pr.c && pr.c.some((c, k) => c[0] && !givens_of(pickTier, i)[k]) ? '途中' : '') + '</small>';
+    b.onclick = () => { $('pickSheet').classList.remove('show'); load(pickTier, i); };
+    $('nums').appendChild(b);
+  });
+}
+const givens_of = (t, i) => [...PUZZLES[t][i][0]].map(Number);
+$('pickBtn').onclick = () => { pickTier = tier; renderPick(); openSheet('pickSheet'); };
+$('helpBtn').onclick = () => openSheet('helpSheet');
+$('nextBtn').onclick = () => { $('clearSheet').classList.remove('show'); const n = idx + 1; if (n < PUZZLES[tier].length) load(tier, n); else { const ts = Object.keys(TIERS); const ti = ts.indexOf(tier); load(ts[Math.min(ti + 1, ts.length - 1)], ti + 1 < ts.length ? 0 : idx); } };
+let confirmFn = null;
+function confirmBox(msg, fn){ $('confirmMsg').textContent = msg; confirmFn = fn; openSheet('confirmSheet'); }
+$('confirmOk').onclick = () => { $('confirmSheet').classList.remove('show'); if (confirmFn) confirmFn(); };
+$('resetBtn').onclick = () => confirmBox('この問題を最初からやり直しますか？（タイムもリセット）', () => { delete DB.prog[key()]; store.set(DB); load(tier, idx); });
+
+// ---- ボタン・キー ----
+document.querySelectorAll('#modes button').forEach((b) => b.onclick = () => { mode = b.dataset.m; render(); });
+$('undoBtn').onclick = undo; $('redoBtn').onclick = redo; $('eraseBtn').onclick = erase; $('hintBtn').onclick = doHint;
+$('hintClose').onclick = () => { hint = null; showHint(null); render(); };
+$('hintApply').onclick = applyHint;
+$('autoMemo').onclick = autoMemo; $('tentFix').onclick = tentFix; $('tentClear').onclick = tentClear; $('checkBtn').onclick = check;
+document.addEventListener('keydown', (e) => {
+  if (document.querySelector('.sheet.show')) { if (e.key === 'Escape') document.querySelectorAll('.sheet.show').forEach((s) => s.classList.remove('show')); return; }
+  const k = e.key;
+  if ((e.ctrlKey || e.metaKey) && (k === 'z' || k === 'Z')) { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && (k === 'y' || k === 'Y')) { e.preventDefault(); redo(); return; }
+  if (/^[1-9]$/.test(k)) { input(+k); return; }
+  if (k === 'Backspace' || k === 'Delete' || k === '0') { erase(); return; }
+  if (k === 'm' || k === 'M') { mode = mode === 'memo' ? 'fix' : 'memo'; render(); return; }
+  if (k === 't' || k === 'T') { mode = mode === 'tent' ? 'fix' : 'tent'; render(); return; }
+  const mv = { ArrowUp: -9, ArrowDown: 9, ArrowLeft: -1, ArrowRight: 1 }[k];
+  if (mv) { e.preventDefault(); if (sel < 0) sel = 0; else { const r = Math.floor(sel / 9), c = sel % 9; if (mv === -9) sel = ((r + 8) % 9) * 9 + c; if (mv === 9) sel = ((r + 1) % 9) * 9 + c; if (mv === -1) sel = r * 9 + (c + 8) % 9; if (mv === 1) sel = r * 9 + (c + 1) % 9; } render(); }
+});
+let tt; function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 1800); }
+
+
+// ---- 引き継ぎコード ----
+const TIER_ORDER = ['nan', 'cho', 'kyoku'];
+function b64u(bytes){ let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function unb64u(str){ str = str.replace(/[^A-Za-z0-9\-_]/g, '').replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; const s = atob(str); return Uint8Array.from(s, (c) => c.charCodeAt(0)); }
+function exportCode(){
+  save();
+  const out = [2, TIER_ORDER.indexOf(tier), idx];
+  const u24 = (n) => { n = Math.max(0, Math.min(0xffffff, Math.round(n || 0))); out.push(n >> 16 & 255, n >> 8 & 255, n & 255); };
+  TIER_ORDER.forEach((t, ti) => PUZZLES[t].forEach((pz, i) => {
+    const pr = DB.prog[t + ':' + i]; if (!pr) return;
+    const g = [...pz[0]].map(Number);
+    const hasC = !!(pr.c && pr.c.some((c, k) => !g[k] && (c[0] || c[2])));
+    if (!pr.done && !hasC) return;
+    out.push(ti, i, (pr.done ? 1 : 0) | (hasC ? 2 : 0));
+    if (pr.done) u24(pr.best || pr.t);
+    if (hasC) {
+      u24(pr.t); out.push(Math.min(255, pr.h || 0));
+      for (let k = 0; k < 81; k++) if (!g[k]) { const c = pr.c[k]; const w = (c[0] & 15) | (c[1] ? 16 : 0) | ((c[2] >> 1) << 5); out.push(w >> 8 & 255, w & 255); }
+    }
+  }));
+  let sum = 0; for (const b of out) sum = (sum + b) & 255; out.push(sum);
+  return b64u(out);
+}
+function importCode(str){
+  const a = unb64u(str); if (a.length < 4) throw 0;
+  let sum = 0; for (let k = 0; k < a.length - 1; k++) sum = (sum + a[k]) & 255; if (sum !== a[a.length - 1] || a[0] !== 2) throw 0;
+  let p = 3; const end = a.length - 1; const u24 = () => { const n = a[p] << 16 | a[p + 1] << 8 | a[p + 2]; p += 3; return n; };
+  const recs = [];
+  while (p < end) {
+    const t = TIER_ORDER[a[p]], i = a[p + 1], f = a[p + 2]; p += 3;
+    if (!t || !PUZZLES[t][i]) throw 0;
+    const r = { t, i }; if (f & 1) { r.done = true; r.best = u24(); }
+    if (f & 2) {
+      r.time = u24(); r.h = a[p++]; const g = [...PUZZLES[t][i][0]].map(Number);
+      r.c = g.map((v) => [v, 0, 0]);
+      for (let k = 0; k < 81; k++) if (!g[k]) { const w = a[p] << 8 | a[p + 1]; p += 2; r.c[k] = [w & 15, (w >> 4) & 1, ((w >> 5) << 1) & 0x3fe]; }
+    }
+    recs.push(r);
+  }
+  if (p !== end) throw 0;
+  for (const r of recs) {
+    const k = r.t + ':' + r.i; const pr = DB.prog[k] || {};
+    if (r.done) { pr.done = true; pr.best = pr.best ? Math.min(pr.best, r.best) : r.best; }
+    if (r.c) { pr.c = r.c; pr.t = r.time; pr.h = r.h; }
+    DB.prog[k] = pr;
+  }
+  const ct = TIER_ORDER[a[1]], ci = a[2];
+  store.set(DB);
+  return { n: recs.length, t: PUZZLES[ct] && PUZZLES[ct][ci] ? ct : tier, i: PUZZLES[ct] && PUZZLES[ct][ci] ? ci : idx };
+}
+$('xferBtn').onclick = () => { $('xferOut').value = exportCode(); $('xferIn').value = ''; openSheet('xferSheet'); };
+$('xferCopy').onclick = async () => {
+  const ta = $('xferOut');
+  try { await navigator.clipboard.writeText(ta.value); toast('コピーしました'); }
+  catch (e) { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {} toast(ok ? 'コピーしました' : '選択した文字を長押ししてコピーしてください'); }
+};
+$('xferLoad').onclick = () => {
+  const v = $('xferIn').value.trim(); if (!v) { toast('コードを貼り付けてください'); return; }
+  try { const r = importCode(v); $('xferSheet').classList.remove('show'); load(r.t, r.i); toast(r.n + ' 問ぶんの記録を読み込みました'); }
+  catch (e) { toast('コードが正しくありません（途中で切れていないか確認してください）'); }
+};
+
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+load(tier, idx);
+if (!DB.seenHelp) { DB.seenHelp = 1; store.set(DB); openSheet('helpSheet'); }
+</script>
+</body>
+</html>
