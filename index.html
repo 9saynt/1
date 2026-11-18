@@ -31,8 +31,8 @@ header{display:flex;align-items:center;gap:8px}
 .iconbtn{border:1px solid var(--thin);background:var(--paper);border-radius:10px;width:34px;height:34px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}
 
 .boardwrap{position:relative}
-.board{display:grid;grid-template-columns:repeat(9,1fr);aspect-ratio:1;width:100%;background:var(--paper);border:2.5px solid var(--line);border-radius:6px;overflow:hidden;user-select:none;touch-action:manipulation}
-.cell{position:relative;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--thin);border-bottom:1px solid var(--thin);cursor:pointer;font-size:min(7.2vw,34px);line-height:1}
+.board{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));grid-template-rows:repeat(9,minmax(0,1fr));aspect-ratio:1;width:100%;background:var(--paper);border:2.5px solid var(--line);border-radius:6px;overflow:hidden;user-select:none;touch-action:manipulation}
+.cell{position:relative;min-width:0;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--thin);border-bottom:1px solid var(--thin);cursor:pointer;font-size:min(7.2vw,34px);line-height:1}
 .cell.c2,.cell.c5{border-right:2px solid var(--line)}
 .cell.c8{border-right:0}
 .cell.r2,.cell.r5{border-bottom:2px solid var(--line)}
@@ -105,7 +105,7 @@ header{display:flex;align-items:center;gap:8px}
 .nums button small{font-size:9.5px;color:var(--sub);font-weight:500;min-height:12px}
 .nums button.clr{background:#eef6ef;border-color:#9cc9a5}
 .nums button.cur{outline:2.5px solid var(--ink)}
-.close{float:right;border:0;background:#e8e3d6;border-radius:999px;width:30px;height:30px;font-size:16px;cursor:pointer}
+.close{position:sticky;top:0;z-index:3;float:right;border:0;background:#e8e3d6;border-radius:999px;width:30px;height:30px;font-size:16px;cursor:pointer}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
 .legend i{font-style:normal;font-weight:700}
 .clear{text-align:center}
@@ -113,6 +113,21 @@ header{display:flex;align-items:center;gap:8px}
 .clear .stat{font-size:14px;color:var(--sub);margin-bottom:14px}
 .clear button{margin:4px}
 .confirmrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.guide section{border-top:1px solid #e6e0d2;padding-top:4px;margin-top:12px;scroll-margin-top:8px}
+.guide .cap{font-size:12.5px;color:var(--sub);margin-top:4px}
+.gtoc{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 4px}
+.gtoc a{font-size:12px;padding:4px 9px;border-radius:999px;background:#eee8da;color:var(--ink);text-decoration:none}
+.glegend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--sub)}
+.glegend .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:3px}
+.mb{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));grid-template-rows:repeat(9,minmax(0,1fr));width:min(100%,300px);aspect-ratio:1;border:2px solid var(--line);margin:6px auto;background:#fff}
+.mb div{border-right:1px solid #ddd5c4;border-bottom:1px solid #ddd5c4;display:flex;align-items:center;justify-content:center;font-size:10.5px;line-height:1.05;text-align:center;min-width:0;min-height:0;overflow:hidden;font-weight:700;color:var(--ink)}
+.mb div.c2,.mb div.c5{border-right:2px solid var(--line)} .mb div.r2,.mb div.r5{border-bottom:2px solid var(--line)}
+.mb div.big{font-size:15px}
+.mb div.u,.sw.u{background:#fbf3d9}
+.mb div.k,.sw.k{background:#bfe6cf} .mb div.k2,.sw.k2{background:#c9d8f6}
+.mb div.p,.sw.p{background:var(--hint);color:#fff;font-size:15px}
+.mb div.x,.sw.x{background:#fde3e6;color:var(--bad);text-decoration:line-through}
+.mb div.cand{font-weight:500;color:#555}
 </style>
 </head>
 <body>
@@ -129,7 +144,7 @@ header{display:flex;align-items:center;gap:8px}
   <div class="hintbox" id="hintbox">
     <div class="tn" id="hintName"></div>
     <div class="td" id="hintDesc"></div>
-    <div class="row"><button class="btn-s" id="hintClose">閉じる</button><button class="btn-p" id="hintApply">この手を反映</button></div>
+    <div class="row"><button class="btn-s" id="hintClose">閉じる</button><button class="btn-s" id="hintGuide">解説</button><button class="btn-p" id="hintApply">この手を反映</button></div>
   </div>
 
   <div class="modes" id="modes">
@@ -148,6 +163,7 @@ header{display:flex;align-items:center;gap:8px}
   <div class="pad" id="pad"></div>
 
   <div class="tools">
+    <button id="guideBtn" style="border-color:var(--accent);font-weight:700">手筋の解説</button>
     <button id="autoMemo">候補を全部書く</button>
     <button id="tentFix">仮置きを確定</button>
     <button id="tentClear">仮置きを全消去</button>
@@ -165,6 +181,130 @@ header{display:flex;align-items:center;gap:8px}
   <div class="tabs" id="tabs"></div>
   <p class="tierdesc" id="tierDesc"></p>
   <div class="nums" id="nums"></div>
+</div></div>
+
+<div class="sheet" id="guideSheet"><div class="panel guide">
+  <button class="close" data-close>✕</button>
+  <h2>手筋の解説</h2>
+  <p>やさしい順に並べています。ヒントに出た手筋の「解説」を押すと、その項目に飛びます。図は説明用に、関係するマスだけを表示しています。</p>
+  <div class="glegend"><span><i class="sw k"></i>注目するマス</span><span><i class="sw k2"></i>もう一方の注目マス</span><span><i class="sw p"></i>入る数字</span><span><i class="sw x"></i>消せる候補</span></div>
+  <nav class="gtoc" id="gtoc"></nav>
+
+  <section id="g-basic"><h3>はじめに：候補と「消去」</h3>
+  <p>空きマスに入りうる数字を<b>候補</b>と呼びます。難しい手筋の多くは、マスに数字を入れるのではなく、<b>「この候補はありえない」と消していく</b>手です。候補が1つになったマスや、ある数字の入り先が1か所になった場所が次の一手になります。難問では「候補を全部書く」ボタンで全候補を書いてから始めるのがおすすめです。</p></section>
+
+  <section id="g-ns"><h3>ネイキッドシングル</h3>
+  <p><b>そのマスに入れる候補が1つしかない</b>とき、その数字で確定します。</p>
+  <p>見つけ方：同じ行・列・ブロックにすでにある数字を数え、8種類そろっているマスを探します。</p>
+  <div class="mb" data-d="ns"></div>
+  <p class="cap">R5C5（5行目5列目）の行に1・2・3、列に4・5・6、ブロックに7・8がある → 残りは9だけ。</p></section>
+
+  <section id="g-hs"><h3>ヒドゥンシングル</h3>
+  <p>ある行・列・ブロックの中で、<b>ある数字が入れる場所が1か所しかない</b>とき、そこで確定します。マスの候補が複数あっても使えるのがネイキッドとの違いです。</p>
+  <div class="mb" data-d="hs"></div>
+  <p class="cap">左上のブロックで5が入れる場所を探す。2・3行目は他の5に、2・3列目も他の5にふさがれていて、残るのはR1C1だけ。</p></section>
+
+  <section id="g-lc"><h3>ロックド・キャンディデート</h3>
+  <p><b>ポインティング：</b>あるブロックの中で、数字の候補が1本の行（または列）の上にしかないとき、その数字は必ずその行のうちブロック内のどこかに入ります。だから同じ行のブロック外の候補は消せます。</p>
+  <div class="mb" data-d="lc1"></div>
+  <p class="cap">左上ブロックの4は2行目（R2C1かR2C3）にしかない → 2行目の他の4（R2C5・R2C8）を消せる。</p>
+  <p><b>クレーミング：</b>逆向きの考え方です。ある行（列）の中で、数字の候補が1つのブロックの中にしかないとき、そのブロックの他の場所からその数字を消せます。</p>
+  <div class="mb" data-d="lc2"></div>
+  <p class="cap">5行目の7はR5C7かR5C9（右中ブロック）にしかない → そのブロックの他の7（R4C8・R6C7）を消せる。</p></section>
+
+  <section id="g-nsub"><h3>ネイキッドペア／トリプル／クアッド</h3>
+  <p>同じ行・列・ブロックの中で、<b>2つのマスの候補が同じ2つの数字だけ</b>なら、その2つの数字はその2マスで使い切られます。だから同じ範囲の他のマスからその2つの数字を消せます。</p>
+  <div class="mb" data-d="np"></div>
+  <p class="cap">3行目のR3C2とR3C7がどちらも{2,6} → 3行目の他のマスから2と6を消せる。</p>
+  <p>3マスで3つの数字ならトリプル、4マスで4つの数字ならクアッドです。3マスすべてに3つの数字がそろっている必要はなく、{1,2}{2,3}{1,3}のように合わせて3種類ならトリプルになります。</p></section>
+
+  <section id="g-hsub"><h3>ヒドゥンペア／トリプル／クアッド</h3>
+  <p>ある範囲の中で、<b>2つの数字の入り先がどちらも同じ2マスしかない</b>なら、その2マスはその2つの数字で埋まります。だからその2マスの他の候補を消せます。</p>
+  <div class="mb" data-d="hp"></div>
+  <p class="cap">6列目で1と8が入れるのはR2C6とR7C6だけ → この2マスは{1,8}に決まり、3・9・5などの他の候補を消せる。</p></section>
+
+  <section id="g-fish"><h3>X-ウィング／ソードフィッシュ／ジェリーフィッシュ</h3>
+  <p>1種類の数字だけに注目する手です。<b>2本の行で、ある数字の入り先がどちらも同じ2本の列の上だけ</b>のとき、その2本の列ではその2行のどちらかに必ずその数字が入ります。だから2本の列の他の行の候補を消せます。</p>
+  <div class="mb" data-d="xw"></div>
+  <p class="cap">3は2行目でC2かC7、6行目でもC2かC7だけ → 2列目と7列目の他の3（R4C2・R9C7など）を消せる。</p>
+  <p>3本の行と3本の列で同じことが起きるのがソードフィッシュ、4本ずつならジェリーフィッシュです。行と列を入れ替えても成り立ちます。</p></section>
+
+  <section id="g-xyw"><h3>XY-ウィング</h3>
+  <p>候補が2つのマスを3つ使う手です。軸{X,Y}と、軸から見える2つの羽{X,Z}・{Y,Z}を探します。</p>
+  <p>軸がXなら羽{X,Z}はZ、軸がYなら羽{Y,Z}はZになります。<b>どちらにしてもどちらかの羽がZ</b>なので、両方の羽から見えるマスのZを消せます。</p>
+  <div class="mb" data-d="xyw"></div>
+  <p class="cap">軸R2C2{1,2}、羽R2C8{1,3}とR7C2{2,3} → 両方の羽から見えるR7C8の3を消せる。</p></section>
+
+  <section id="g-xyz"><h3>XYZ-ウィング</h3>
+  <p>XY-ウィングの軸が{X,Y,Z}の3候補になった形です。軸がZの可能性もあるので、<b>軸と羽2つの3マスすべてから見えるマス</b>だけZを消せます。</p>
+  <div class="mb" data-d="xyz"></div>
+  <p class="cap">軸R2C2{1,2,3}、羽R2C3{1,3}とR5C2{2,3} → 3マスすべてから見えるR1C2・R3C2の3を消せる。</p></section>
+
+  <section id="g-ww"><h3>W-ウィング</h3>
+  <p>離れた2マスが同じ{X,Y}で、その2マスがXの<b>強リンク</b>（ある行などでXの入り先がちょうど2か所）でつながっている形です。</p>
+  <p>もし両方ともYでないなら、両方ともXになります。すると強リンクの両端どちらにもXが入れず、矛盾します。だから<b>少なくとも片方はY</b>で、両方から見えるマスのYを消せます。</p>
+  <div class="mb" data-d="ww"></div>
+  <p class="cap">R2C2とR8C6が{4,7}。5行目の7はR5C2とR5C6だけ → R2C2とR8C6のどちらかは4。両方から見えるR2C6・R8C2の4を消せる。</p></section>
+
+  <section id="g-ur"><h3>ユニーク・レクタングル</h3>
+  <p>解が1つだけというナンプレの性質を使う手です。2つのブロックにまたがる長方形の4マスがすべて{A,B}になると、AとBを入れ替えた解も成り立ち、解が2つになってしまいます。</p>
+  <p>だから、3マスが{A,B}で4マス目に余分な候補があるなら、<b>4マス目はAでもBでもない</b>と分かります。</p>
+  <div class="mb" data-d="ur"></div>
+  <p class="cap">R1C1・R1C4・R3C1が{2,5}、R3C4が{2,5,8} → R3C4から2と5を消せる（8に決まる）。</p></section>
+
+  <section id="g-link"><h3>連鎖の基本：強リンクと弱リンク</h3>
+  <p>ここから先の手筋は、候補どうしの2種類の関係をつないでいきます。</p>
+  <ul>
+    <li><b>強リンク（＝）：どちらか一方は必ず真。</b>例：ある行で数字の入り先がちょうど2か所／候補がちょうど2つのマス。</li>
+    <li><b>弱リンク（－）：両方が同時に真にはならない。</b>例：同じ行・列・ブロックにある同じ数字／同じマスの別の数字。</li>
+  </ul>
+  <p>強・弱・強…と交互につなぎ、<b>両端を強リンクで終える</b>と、「両端の少なくとも一方は真」と言えます。理由はこうです。始点が偽なら、強リンクで次が真になり、弱リンクでその次が偽になり、…と進んで、終点が真になります。どこにも仮定は置かず、盤面に今ある関係だけで成り立ちます。</p>
+  <p>結論として、<b>両端の両方と弱リンクでつながる候補</b>（両端から見える同じ数字など）を消せます。</p></section>
+
+  <section id="g-xc"><h3>X-チェーン</h3>
+  <p>1種類の数字だけで作る連鎖です。強リンクは「行・列・ブロックでその数字の入り先が2か所」です。</p>
+  <div class="mb" data-d="xc"></div>
+  <p class="cap">数字6：R1C2＝R1C7（1行目に2か所）－R6C7（同じ列）＝R6C4（6行目に2か所）。両端R1C2とR6C4のどちらかは6 → 両方から見えるR1C4・R6C2の6を消せる。</p>
+  <p>4マスで作る短いものは、スカイスクレイパーや2-ストリング・カイトという名前でも呼ばれます。</p></section>
+
+  <section id="g-xyc"><h3>XY-チェーン</h3>
+  <p>候補が2つのマスだけをつなぐ連鎖です。マスの中の2候補が強リンク、隣のマスへ同じ数字で渡るのが弱リンクです。</p>
+  <div class="mb" data-d="xyc"></div>
+  <p class="cap">R1C1{1,2}→R1C6{2,3}→R5C6{3,4}→R5C3{4,1}。R1C1が1でないなら2、R1C6は3、R5C6は4、R5C3は1になる → 両端のどちらかは1。両方から見えるR1C3・R5C1の1を消せる。</p>
+  <p>XY-ウィングは、このうち3マスでできる短い形です。</p></section>
+
+  <section id="g-aic"><h3>AIC（交互推論チェーン）</h3>
+  <p>X-チェーンとXY-チェーンを混ぜた、最も一般的な連鎖です。マスの中の強リンクと、行・列・ブロックの中の強リンクを自由に乗り継ぎ、数字も途中で切り替わります。</p>
+  <div class="mb" data-d="aic"></div>
+  <p class="cap">R2C2(5)＝R2C2(8)－R2C7(8)＝R8C7(8)－R8C7(5)＝R8C3(5)。両端はR2C2の5とR8C3の5 → どちらかは5。両方から見えるR8C2・R1C3・R3C3の5を消せる。</p>
+  <p>コツ：候補が2つのマスと、入り先が2か所しかない数字（どちらも強リンク）に印を付けておき、それらを弱リンクでつなげないか探します。ヒントでは連鎖が「＝」「－」の記号つきで表示されます。</p>
+  <p>両端が同じマスの別の数字なら、そのマスの他の候補を消せます。両端がお互いに見える別の数字なら、それぞれのマスから相手の数字を消せます。</p></section>
+
+  <section id="g-gaic"><h3>グループ連鎖（グループAIC）</h3>
+  <p>1つのマスではなく、<b>ブロックと行（列）が重なる部分にある同じ数字の候補のまとまり</b>を1つの点として扱います。たとえば「R1C1かR1C2のどちらかが3」をひとまとめにして、「R1C12(3)」と書きます。</p>
+  <div class="mb" data-d="gaic"></div>
+  <p class="cap">数字3：1行目の3はR1C12（グループ）かR1C8だけ → 強リンク。R1C8－R7C8（同じ列）、7行目の3はR7C8かR7C1だけ → R7C8＝R7C1。両端はグループR1C12とR7C1 → 両方から見えるR2C1・R3C1の3を消せる。</p>
+  <p>グループ全体が「見える」とは、グループのすべてのマスから見えることです。</p></section>
+
+  <section id="g-als"><h3>ALS-XZ</h3>
+  <p><b>ALS（あと1つ余るまとまり）：</b>同じ行・列・ブロックの中で、N個のマスにN+1種類の候補しかない組のことです（候補が2つのマス1つも、ALSの一種です）。どれか1つの数字を取り除くと、残りの数字でぴったり埋まります。</p>
+  <p>2つのALS（AとB）について：</p>
+  <ul>
+    <li>共通の数字Xが、AのXのマスとBのXのマスでお互いに全部見えている（両方には入れない）</li>
+    <li>AかBの少なくとも一方は、Xを使わずに残りの数字でぴったり埋まる</li>
+    <li>だから、もう1つの共通の数字Zは、AかBのどちらかに必ず入る</li>
+  </ul>
+  <p>結論として、AとB両方のZのマスすべてから見えるマスのZを消せます。</p>
+  <div class="mb" data-d="als"></div>
+  <p class="cap">A＝R1C1{3,5}とR1C2{5,7}（2マスに3種類）、B＝R5C1{3,7}。共通のX＝3はR1C1とR5C1で同じ列 → Aに3が入らないならAは{5,7}で7を含み、Bに3が入らないならBは7。どちらにしても、7はR1C2かR5C1にある → 両方から見えるR2C1・R3C1・R5C2の7を消せる。</p></section>
+
+  <section id="g-tips"><h3>難問の進め方</h3>
+  <ul>
+    <li>まず「候補を全部書く」。確定したら周りのメモは自動で消えます。</li>
+    <li>上の順番（シングル→ロックド→ペア類→ウィング類→連鎖→ALS）で探します。</li>
+    <li>連鎖は、強リンク（候補2つのマス、入り先が2か所しかない数字）を見つけるのが出発点です。</li>
+    <li>このアプリの問題は、難所では次に置けるマスが常に1か所だけになるよう作ってあります。他で稼げない分、1つの手を見つけたときの前進がはっきり分かります。</li>
+  </ul></section>
 </div></div>
 
 <div class="sheet" id="helpSheet"><div class="panel">
@@ -190,6 +330,7 @@ header{display:flex;align-items:center;gap:8px}
   <p>どの問題も解は1つだけで、内蔵ソルバーが<b>仮定・試し入れ・場合分け（強制連鎖、背理法）を一切使わずに</b>最後まで解けることを確認済みです。使う手筋はすべて、盤面の候補を観察すれば成り立つ関係（「この2つのどちらかは必ず真」「この2つは同時に真にならない」）を組み合わせたものです。</p>
   <p>難しさは「試す量」ではなく、<b>その関係の連なりを盤面から見つけ出す難しさ</b>にあります。「ヒント」を押すと、今の盤面で使える一番やさしい一手を、手筋の名前と根拠つきで表示します。</p>
   <p style="font-size:12px;color:var(--sub)">※「仮置き」は自由に使えるメモ機能です。解くために必要になることはありません。</p>
+  <p><button class="btn-p" id="helpGuide" style="border:0;border-radius:9px;padding:8px 14px;font:inherit;font-weight:700">手筋の解説を見る</button></p>
   <h3>操作</h3>
   <ul>
     <li><b>確定</b>：本記入。<b>仮置き</b>：オレンジ色で数字を入れる仮定用（「仮置きを確定」「全消去」で一括処理）。<b>メモ</b>：候補を小さく書く。</li>
@@ -853,7 +994,8 @@ function showHint(h){
   const box = $('hintbox');
   if (!h) { box.classList.remove('show'); return; }
   box.classList.add('show');
-  if (h.msg) { $('hintName').textContent = 'ヒント'; $('hintDesc').textContent = h.msg; $('hintApply').style.display = 'none'; return; }
+  if (h.msg) { $('hintName').textContent = 'ヒント'; $('hintDesc').textContent = h.msg; $('hintApply').style.display = 'none'; $('hintGuide').style.display = 'none'; return; }
+  $('hintGuide').style.display = '';
   const s = h.step;
   $('hintName').textContent = s.tech;
   let d = s.desc;
@@ -993,6 +1135,53 @@ $('xferLoad').onclick = () => {
   try { const r = importCode(v); $('xferSheet').classList.remove('show'); load(r.t, r.i); toast(r.n + ' 問ぶんの記録を読み込みました'); }
   catch (e) { toast('コードが正しくありません（途中で切れていないか確認してください）'); }
 };
+
+
+// ---- 手筋の解説 ----
+const DIAG = {
+  ns:{u:['r5','c5','b5'],c:[[5,1,'1','big'],[5,2,'2','big'],[5,8,'3','big'],[1,5,'4','big'],[3,5,'5','big'],[8,5,'6','big'],[4,4,'7','big'],[6,6,'8','big'],[5,5,'9','p']]},
+  hs:{u:['b1'],c:[[2,7,'5','big'],[3,5,'5','big'],[7,2,'5','big'],[6,3,'5','big'],[1,1,'5','p'],[1,2,'',''],[1,3,'','']]},
+  lc1:{u:['b1','r2'],c:[[2,1,'4','k'],[2,3,'4','k'],[2,5,'4','x'],[2,8,'4','x'],[1,2,'9','big'],[3,1,'2','big']]},
+  lc2:{u:['r5','b6'],c:[[5,7,'7','k'],[5,9,'7','k'],[4,8,'7','x'],[6,7,'7','x'],[5,2,'1','big'],[5,4,'3','big']]},
+  np:{u:['r3'],c:[[3,2,'26','k'],[3,7,'26','k'],[3,4,'268','x'],[3,5,'1 6','x'],[3,9,'2 9','x'],[3,1,'5','big']]},
+  hp:{u:['c6'],c:[[2,6,'1 3\n8 9','k'],[7,6,'1 5\n8','k'],[1,6,'3 9','cand'],[4,6,'5 9','cand'],[9,6,'3 5','cand']]},
+  xw:{u:['r2','r6'],c:[[2,2,'3','k'],[2,7,'3','k'],[6,2,'3','k'],[6,7,'3','k'],[4,2,'3','x'],[8,2,'3','x'],[9,7,'3','x'],[1,7,'3','x']]},
+  xyw:{c:[[2,2,'12','k'],[2,8,'13','k2'],[7,2,'23','k2'],[7,8,'3','x']]},
+  xyz:{c:[[2,2,'123','k'],[2,3,'13','k2'],[5,2,'23','k2'],[1,2,'3','x'],[3,2,'3','x']]},
+  ww:{u:['r5'],c:[[2,2,'47','k'],[8,6,'47','k'],[5,2,'7','k2'],[5,6,'7','k2'],[2,6,'4','x'],[8,2,'4','x']]},
+  ur:{c:[[1,1,'25','k'],[1,4,'25','k'],[3,1,'25','k'],[3,4,'25\n8','k2'],[3,4,'8','p']]},
+  xc:{c:[[1,2,'6','k'],[1,7,'6','k2'],[6,7,'6','k2'],[6,4,'6','k'],[1,4,'6','x'],[6,2,'6','x']]},
+  xyc:{c:[[1,1,'12','k'],[1,6,'23','k2'],[5,6,'34','k2'],[5,3,'14','k'],[1,3,'1','x'],[5,1,'1','x']]},
+  aic:{c:[[2,2,'58','k'],[2,7,'8','k2'],[8,7,'58','k2'],[8,3,'5','k'],[8,2,'5','x'],[1,3,'5','x'],[3,3,'5','x']]},
+  gaic:{c:[[1,1,'3','k'],[1,2,'3','k'],[1,8,'3','k2'],[7,8,'3','k2'],[7,1,'3','k'],[2,1,'3','x'],[3,1,'3','x']]},
+  als:{c:[[1,1,'35','k'],[1,2,'57','k'],[5,1,'37','k2'],[2,1,'7','x'],[3,1,'7','x'],[5,2,'7','x']]}
+};
+function renderDiagrams(){
+  document.querySelectorAll('.mb').forEach((el) => {
+    if (el.dataset.done) return; const d = DIAG[el.dataset.d]; if (!d) return; el.dataset.done = 1;
+    const cl = Array(81).fill(''), tx = Array(81).fill('');
+    for (const u of d.u || []) { const t = u[0], n = +u[1] - 1; const idx = t === 'r' ? n : t === 'c' ? 9 + n : 18 + n; for (const c of S.UNITS[idx]) cl[c] = 'u'; }
+    for (const [r, c, t, k] of d.c) { const i = (r - 1) * 9 + c - 1; tx[i] = t; cl[i] = k || cl[i]; }
+    let h = ''; for (let i = 0; i < 81; i++) h += '<div class="c' + (i % 9) + ' r' + Math.floor(i / 9) + ' ' + cl[i] + '">' + tx[i].replace(/\n/g, '<br>') + '</div>';
+    el.innerHTML = h;
+  });
+  const toc = $('gtoc'); if (!toc.dataset.done) { toc.dataset.done = 1;
+    document.querySelectorAll('.guide section').forEach((sec) => { const a = document.createElement('a'); a.href = '#'; a.textContent = sec.querySelector('h3').textContent.replace(/（.*）|：.*/g, ''); a.onclick = (e) => { e.preventDefault(); sec.scrollIntoView({ behavior: 'smooth' }); }; toc.appendChild(a); }); }
+}
+function techId(name){
+  if (/グループ/.test(name)) return 'g-gaic';
+  const m = [['ネイキッドシングル','g-ns'],['ヒドゥンシングル','g-hs'],['ロックド','g-lc'],['ネイキッド','g-nsub'],['ヒドゥン','g-hsub'],['X-ウィング','g-fish'],['ソードフィッシュ','g-fish'],['ジェリーフィッシュ','g-fish'],['XYZ-','g-xyz'],['XY-ウィング','g-xyw'],['W-ウィング','g-ww'],['ユニーク','g-ur'],['XY-チェーン','g-xyc'],['X-チェーン','g-xc'],['AIC','g-aic'],['ALS','g-als']];
+  for (const [k, v] of m) if (name.includes(k)) return v; return null;
+}
+function openGuide(id){
+  document.querySelectorAll('.sheet.show').forEach((s) => s.classList.remove('show'));
+  renderDiagrams(); openSheet('guideSheet');
+  const panel = document.querySelector('#guideSheet .panel');
+  requestAnimationFrame(() => { const el = id && document.getElementById(id); if (el) panel.scrollTop += el.getBoundingClientRect().top - panel.getBoundingClientRect().top - 10; else panel.scrollTop = 0; });
+}
+$('guideBtn').onclick = () => openGuide(null);
+$('helpGuide').onclick = () => openGuide(null);
+$('hintGuide').onclick = () => openGuide(hint && hint.step ? techId(hint.step.tech) : null);
 
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 load(tier, idx);
